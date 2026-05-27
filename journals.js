@@ -1,79 +1,126 @@
 (function () {
-  var entries = window.JOURNAL_ENTRIES || [];
-  var scribbles = window.JOURNAL_SCRIBBLES || {};
-  var bodies = window.JOURNAL_BODIES || {};
   var main = document.getElementById('entry-main');
   if (!main) return;
+
+  // 1024x600 is the original layout coordinate space. Branches are positioned
+  // with absolute px values that we convert to percentages so the whole
+  // diagram scales with its container.
+  var VW = 1024;
+  var VH = 600;
 
   function param(name) {
     var m = new RegExp('[?&]' + name + '=([^&]+)').exec(window.location.search);
     return m ? decodeURIComponent(m[1]) : null;
   }
-
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function escapeHTML(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
 
-  function ovalSVG(id) {
-    var d = scribbles[id];
-    if (!d) return '';
+  function centerSVG(c) {
+    if (!c) return '';
+    var paths = (c.paths || []).map(function (d) {
+      return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
+    }).join('');
+    return '<svg class="center-shape" preserveAspectRatio="none" viewBox="' + (c.viewBox || '0 0 200 74') + '" aria-hidden="true">' + paths + '</svg>';
+  }
+
+  function arrowsSVG(arrows) {
+    var parts = (arrows || []).map(function (a) {
+      var head = a.head ? '<polygon points="' + a.head + '" />' : '';
+      return '<path class="arrow-path" d="' + a.d + '" fill="none" />' + head;
+    }).join('');
+    return '<svg class="arrows-svg" viewBox="0 0 ' + VW + ' ' + VH + '" preserveAspectRatio="none" aria-hidden="true">' + parts + '</svg>';
+  }
+
+  function branchHTML(b) {
+    var leftPct = (b.x / VW) * 100;
+    var topPct = (b.y / VH) * 100;
+    var widthPct = (b.w / VW) * 100;
+    var cls = 'branch align-' + (b.align || 'right') + (b.focused ? ' focused' : '');
     return (
-      '<svg class="scribble-oval" preserveAspectRatio="none" viewBox="0 0 150 40" aria-hidden="true">' +
-      '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '</svg>'
+      '<div class="' + cls + '" style="left:' + leftPct.toFixed(3) + '%;top:' + topPct.toFixed(3) + '%;width:' + widthPct.toFixed(3) + '%">' +
+        '<div class="branch-label">' + escapeHTML(b.label) + '</div>' +
+        '<div class="branch-detail">' + escapeHTML(b.detail) + '</div>' +
+      '</div>'
     );
   }
 
-  function placeholderBody(e) {
+  function renderAside(currentId, manifest) {
+    if (!manifest || !manifest.entries) return '';
+    var items = manifest.entries.map(function (e) {
+      var cur = e.id === currentId ? ' class="is-current"' : '';
+      return '<li><a href="journal.html?id=' + e.id + '"' + cur + '>' +
+        '<span class="aside-num">— ' + pad(e.n) + '</span>' +
+        '<span>' + escapeHTML(e.title) + '</span>' +
+      '</a></li>';
+    }).join('');
     return (
-      '<p><em>Draft.</em> Replace this in <code>entries.js</code> → ' +
-      '<code>JOURNAL_BODIES["' + e.id + '"]</code> with your note for ' + e.title + '.</p>' +
-      '<p>The page is wired up — title, eyebrow, scribble oval, and the related-entries sidebar all render from <code>entries.js</code>.</p>'
+      '<aside class="entry-aside">' +
+        '<p class="entry-aside-label">More entries</p>' +
+        '<ul>' + items + '</ul>' +
+      '</aside>'
     );
   }
 
-  function render() {
-    var id = param('id');
-    var entry = null;
-    for (var i = 0; i < entries.length; i++) {
-      if (entries[i].id === id) { entry = entries[i]; break; }
-    }
+  function renderEntry(entry, manifest) {
+    var meta = manifest && manifest.entries
+      ? manifest.entries.find(function (e) { return e.id === entry.id; })
+      : null;
+    var n = meta ? meta.n : 0;
+    var readMin = meta ? meta.readMin : (entry.readMin || 0);
+    var dateLabel = (meta && meta.dateLabel) || entry.dateLabel || '';
+    var title = entry.titleLong || entry.title;
 
-    if (!entry) {
-      main.innerHTML =
-        '<p class="entry-eyebrow">404</p>' +
-        '<h1 class="entry-title">Not found</h1>' +
-        '<p class="entry-body"><a href="/" style="color:var(--accent);text-decoration:underline;text-underline-offset:4px">Back to the index</a></p>';
-      document.title = 'Not found — uthman';
-      return;
-    }
+    document.title = title + ' — uthman';
 
-    document.title = entry.title + ' — uthman';
-    var body = bodies[entry.id] || placeholderBody(entry);
-
-    var asideItems = '';
-    for (var j = 0; j < entries.length; j++) {
-      var e = entries[j];
-      var cur = e.id === entry.id ? ' class="is-current"' : '';
-      asideItems +=
-        '<li><a href="journal.html?id=' + e.id + '"' + cur + '>' +
-          '<span class="aside-num">— ' + pad(e.n) + '</span>' +
-          '<span>' + e.title + '</span>' +
-        '</a></li>';
-    }
+    var branchesHTML = (entry.branches || []).map(branchHTML).join('');
 
     main.innerHTML =
-      '<div class="entry-grid">' +
-        '<article>' +
-          '<p class="entry-eyebrow">No. ' + pad(entry.n) + ' — ' + entry.title + '</p>' +
-          '<h1 class="entry-title"><span class="entry-title-wrap">' + ovalSVG(entry.id) + entry.title + '</span></h1>' +
-          '<p class="entry-meta-row">' + (entry.readMin || 0) + ' min read · ' + (entry.date || '') + '</p>' +
-          '<div class="entry-body">' + body + '</div>' +
-        '</article>' +
-        '<aside class="entry-aside">' +
-          '<p class="entry-aside-label">More entries</p>' +
-          '<ul>' + asideItems + '</ul>' +
-        '</aside>' +
+      '<div class="entry-head">' +
+        '<p class="entry-eyebrow">No. ' + pad(n) + ' — ' + escapeHTML(entry.title) + '</p>' +
+        '<h1 class="entry-title">' + escapeHTML(title) + '</h1>' +
+        '<p class="entry-meta-row">' + readMin + ' min read · ' + escapeHTML(dateLabel) + '</p>' +
+      '</div>' +
+      '<div class="mindmap">' +
+        '<div class="mindmap-stage">' +
+          '<div class="intro-card">' + escapeHTML(entry.intro || '') + '</div>' +
+          arrowsSVG(entry.arrows) +
+          '<div class="center-node">' +
+            centerSVG(entry.center) +
+            '<span class="center-text">' + escapeHTML((entry.center && entry.center.text) || entry.title) + '</span>' +
+          '</div>' +
+          '<div class="branches">' + branchesHTML + '</div>' +
+          '<div class="footer-card">' + escapeHTML(entry.footer || '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      renderAside(entry.id, manifest);
+  }
+
+  function renderError(msg, sub) {
+    main.innerHTML =
+      '<div class="entry-head">' +
+        '<p class="entry-eyebrow">' + escapeHTML(sub || '') + '</p>' +
+        '<h1 class="entry-title">' + escapeHTML(msg) + '</h1>' +
+        '<p class="entry-meta-row"><a href="/" style="color:var(--accent);text-decoration:underline;text-underline-offset:4px">Back to the index</a></p>' +
       '</div>';
   }
 
-  render();
+  var id = param('id');
+  if (!id) { renderError('Missing entry id', '404'); return; }
+
+  Promise.all([
+    fetch('data/' + encodeURIComponent(id) + '.json').then(function (r) {
+      if (!r.ok) throw new Error('entry ' + r.status);
+      return r.json();
+    }),
+    fetch('data/index.json').then(function (r) { return r.ok ? r.json() : { entries: [] }; }).catch(function () { return { entries: [] }; })
+  ]).then(function (results) {
+    renderEntry(results[0], results[1]);
+  }).catch(function (err) {
+    console.error('Failed to load entry:', err);
+    renderError('Not found', '404');
+  });
 })();

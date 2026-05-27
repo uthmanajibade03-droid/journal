@@ -1,0 +1,43 @@
+{
+  "id": "rbp-solutions",
+  "title": "RBP — Solutions",
+  "titleLong": "Revenge Bedtime Procrastination — Solutions",
+  "date": "2025-08-19",
+  "dateLabel": "Aug 2025",
+  "readMin": 5,
+  "teaser": "What changes when you make beginning cheap",
+  "intro": "Even though it brings short-term relief, the long-term cost is steep.",
+  "center": {
+    "text": "Solutions",
+    "viewBox": "0 0 243.9375 74",
+    "paths": [
+      "M 193.4 9.4 C 213.6 14.0, 230.8 22.5, 236.4 29.5 C 241.9 36.5, 238.0 45.1, 226.8 51.5 C 215.5 58.0, 192.1 65.5, 169.0 68.3 C 145.9 71.0, 112.3 70.4, 88.2 68.2 C 64.0 65.9, 38.0 60.5, 24.1 54.6 C 10.1 48.8, 1.7 40.3, 4.3 33.1 C 6.9 25.9, 21.1 16.5, 39.5 11.3 C 58.0 6.1, 89.5 2.3, 115.1 2.0 C 140.7 1.6, 173.2 4.8, 193.4 9.4 Z",
+      "M 16.2 20.2 C 28.5 14.1, 55.0 9.1, 78.7 6.9 C 102.5 4.7, 134.9 4.7, 158.7 6.9 C 182.5 9.2, 207.7 14.4, 221.5 20.3 C 235.3 26.1, 245.1 35.3, 241.6 42.2 C 238.1 49.2, 219.8 57.3, 200.4 61.8 C 181.1 66.2, 150.7 68.5, 125.3 68.9 C 99.8 69.3, 67.7 68.3, 47.7 64.2 C 27.7 60.0, 10.2 51.3, 5.0 43.9 C -0.3 36.6, 3.9 26.4, 16.2 20.2 Z"
+    ]
+  },
+  "branches": [
+    { "label": "Note things down", "detail": "Whatever you don't finish, leave it till the next day.", "align": "left", "x": 422, "y": 186.528, "w": 220, "focused": true },
+    { "label": "No computer after 7:30", "detail": "No matter what you have to do.", "align": "right", "x": 602, "y": 444.059, "w": 292 },
+    { "label": "Hour break w/ a friend", "detail": "So you actually take the break.", "align": "left", "x": 378.371, "y": 407.79, "w": 292 },
+    { "label": "Don't procrastinate", "detail": "Act on what you need, not what you want.", "align": "left", "x": 276, "y": 257.147, "w": 256 },
+    { "label": "No late meals", "detail": "Switch with snacks, then progressively cut it all out.", "align": "right", "x": 734.597, "y": 173.899, "w": 189.6 },
+    { "label": "Plan an easy day", "detail": "Assess routines. Don't jam-pack your schedule.", "align": "left", "x": 256.175, "y": 329.037, "w": 220 },
+    { "label": "Study early mornings", "detail": "Promise to do whatever's keeping you up first thing.", "align": "right", "x": 736, "y": 245.899, "w": 268 },
+    { "label": "Make time for yourself", "detail": "Free time, doing what you love. Attainable and realistic.", "align": "right", "x": 602, "y": 515.931, "w": 292 },
+    { "label": "Block it on the calendar", "detail": "If it's not scheduled, it probably won't get done.", "align": "right", "x": 688, "y": 372.275, "w": 316 },
+    { "label": "Daily leisure window", "detail": "Don't leave yourself fighting to fall asleep.", "align": "left", "x": 416.716, "y": 114.668, "w": 268 }
+  ],
+  "arrows": [
+    { "d": "M 483.5 264.0 Q 449.2 237.0 430.7 197.5", "head": "430.6998050065571,197.49641481430115 437.68912080671566,203.16646460646817 430.6029307981952,206.49589343185195" },
+    { "d": "M 534.7 336.4 Q 551.9 392.2 594.6 432.2", "head": "594.5822140127584,432.1860148136027 585.9918734882862,429.50160618718047 591.3451422254197,423.7883147568243" },
+    { "d": "M 469.1 334.6 Q 441.7 382.4 389.3 399.0", "head": "389.2682842321676,399.00012170360714 395.81171209318643,392.82083761662403 398.17614372480364,400.28466024310444" },
+    { "d": "M 407.3 281.0 Q 350.3 260.5 289.8 259.6", "head": "289.77475857106003,259.64859378350576 297.9319820480872,255.84600188509802 297.8240425581459,263.6746374115907" },
+    { "d": "M 569.6 267.4 Q 638.6 211.0 722.4 180.8", "head": "722.415951449274,180.79930594902558 716.121551497097,187.23207589999035 713.4643278886846,179.86740701163916" },
+    { "d": "M 397.8 313.0 Q 331.7 300.3 270.1 327.5", "head": "270.08539696469,327.45779361363697 275.92455815798684,320.6091297615636 279.0798204591046,327.7745679862151" },
+    { "d": "M 607.4 277.0 Q 662.6 253.3 722.4 249.2", "head": "722.3912977674335,249.1854899634406 714.5785835299448,253.65331899366785 714.0350660111685,245.84282772570427" },
+    { "d": "M 527.3 336.7 Q 548.1 425.6 596.6 503.0", "head": "596.6139146161443,503.0083474587644 588.9928935142825,498.2208598749708 595.6267797847189,494.06264654577905" },
+    { "d": "M 584.5 329.8 Q 637.4 329.9 675.0 367.0", "head": "675.0494334932933,366.9563756748006 666.5277023004508,364.0615358731995 672.0198463525542,358.48161303761316" },
+    { "d": "M 493.2 263.4 Q 467.1 190.7 423.1 127.1", "head": "423.1171331963847,127.11911337337187 430.94458867688786,131.56106572574362 424.5032567403644,136.01173174597875" }
+  ],
+  "footer": "You're taking \"revenge\" on the daytime hours that kept you preoccupied — by choosing some time for yourself at night."
+}

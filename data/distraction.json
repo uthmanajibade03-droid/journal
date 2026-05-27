@@ -1,0 +1,37 @@
+{
+  "id": "distraction",
+  "title": "Distraction",
+  "titleLong": "Distraction",
+  "date": "2025-12-11",
+  "dateLabel": "Dec 2025",
+  "readMin": 5,
+  "teaser": "Attention is the only thing that compounds",
+  "intro": "Something that changes your attention and current thoughts to something else.",
+  "center": {
+    "text": "Distraction",
+    "viewBox": "0 0 283.3125 74",
+    "paths": [
+      "M 200.7 6.0 C 230.2 9.6, 260.0 18.2, 271.1 25.8 C 282.2 33.4, 281.0 44.3, 267.3 51.5 C 253.6 58.7, 219.5 66.4, 188.8 69.1 C 158.0 71.8, 112.4 71.1, 82.7 67.7 C 53.1 64.3, 21.9 56.2, 10.9 48.7 C -0.2 41.2, 2.4 30.0, 16.3 22.6 C 30.3 15.2, 63.6 7.0, 94.3 4.2 C 125.1 1.5, 171.3 2.4, 200.7 6.0 Z",
+      "M 278.8 42.9 C 273.2 50.8, 248.3 60.2, 221.5 64.6 C 194.8 69.1, 150.6 70.9, 118.3 69.7 C 85.9 68.4, 46.4 63.6, 27.6 57.2 C 8.8 50.8, -0.1 39.3, 5.7 31.3 C 11.4 23.4, 35.3 14.0, 61.8 9.5 C 88.4 4.9, 132.8 3.0, 165.1 4.3 C 197.3 5.6, 236.2 10.8, 255.2 17.2 C 274.2 23.6, 284.4 35.0, 278.8 42.9 Z"
+    ]
+  },
+  "branches": [
+    { "label": "Don't fear it", "detail": "What matters is your immediate response — the decisive moment.", "align": "left", "x": 344.634, "y": 395.904, "w": 208.8 },
+    { "label": "Not always \"bad\"", "detail": "Sometimes neutral, not necessarily evil or unproductive.", "align": "left", "x": 240, "y": 205.266, "w": 220 },
+    { "label": "Top-level distraction", "detail": "Self-project, priority, main goal — loss of focus.", "align": "right", "x": 602, "y": 396.161, "w": 280 },
+    { "label": "Decisive moments", "detail": "Tiny moments that decide the rest of your day. And life.", "align": "right", "x": 784, "y": 468.149, "w": 220 },
+    { "label": "Devices", "detail": "Anything that pulls you away from your top priority task.", "align": "left", "x": 254.296, "y": 293.497, "w": 196.8, "focused": true },
+    { "label": "Literally anything", "detail": "Son, wife, family, side projects, work — anything.", "align": "left", "x": 422, "y": 133.266, "w": 244 },
+    { "label": "Women — شهوة النساء", "detail": "The hardest kind to deal with. Avoid, ignore, stay away.", "align": "right", "x": 748, "y": 275.621, "w": 256 }
+  ],
+  "arrows": [
+    { "d": "M 453.2 333.7 Q 410.0 370.0 356.8 388.9", "head": "356.7807171539108,388.9433082189903 363.1002370135372,382.53521421657524 365.7286261648532,389.9102230714443" },
+    { "d": "M 427.0 270.4 Q 345.0 226.0 253.2 209.9", "head": "253.2210594584028,209.8704218583934 261.8793383727072,207.41395971903273 260.5273448358444,215.12572337052217" },
+    { "d": "M 545.6 335.9 Q 583.6 347.3 592.4 385.9", "head": "592.4333615172393,385.9393867376028 586.8187071309321,378.9054933546802 594.4530743486101,377.16893862597266" },
+    { "d": "M 567.1 334.1 Q 664.4 405.9 772.1 460.8", "head": "772.0917482950124,460.7875189526568 763.0937101291919,460.5996116179455 766.6456709480542,453.6223084511468" },
+    { "d": "M 371.0 296.4 Q 319.3 310.1 268.3 293.9", "head": "268.2914489340501,293.85023261544734 277.2025437085285,292.58833328496786 274.81915397687595,300.046123743757" },
+    { "d": "M 492.2 263.4 Q 478.0 195.0 428.7 145.6", "head": "428.65000450311334,145.5857938103271 437.14846656520035,148.5482493086034 431.61216212550295,154.08435970229493" },
+    { "d": "M 643.7 286.4 Q 687.9 271.8 734.1 277.1", "head": "734.0741071941069,277.0591980698213 725.577962591133,280.0282933672742 726.467046773286,272.2495586078678" }
+  ],
+  "footer": "What matters is your immediate response to the specific stimulus."
+}

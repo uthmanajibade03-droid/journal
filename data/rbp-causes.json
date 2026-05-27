@@ -1,0 +1,50 @@
+{
+  "id": "rbp-causes",
+  "title": "RBP — Causes",
+  "titleLong": "Revenge Bedtime Procrastination — Causes",
+  "date": "2025-08-12",
+  "dateLabel": "Aug 2025",
+  "readMin": 5,
+  "teaser": "Why beginning to sleep is hard",
+  "intro": "Sacrificing sleep for leisure time, knowingly, in the notion of getting \"work\" done.",
+  "center": {
+    "text": "Causes",
+    "viewBox": "0 0 167.4375 74",
+    "paths": [
+      "M 158.0 22.1 C 166.2 29.3, 166.9 41.3, 160.2 48.8 C 153.4 56.3, 134.9 63.5, 117.5 67.0 C 100.1 70.5, 73.7 72.5, 55.7 70.0 C 37.7 67.5, 17.1 59.2, 9.4 51.9 C 1.8 44.6, 2.9 33.6, 9.6 26.0 C 16.3 18.5, 32.8 10.0, 49.7 6.5 C 66.7 3.1, 93.2 2.7, 111.2 5.3 C 129.3 7.9, 149.9 14.8, 158.0 22.1 Z"
+    ]
+  },
+  "branches": [
+    { "label": "Random ideas", "detail": "Tomorrow is Saturday or Sunday, or a day off from work.", "align": "right", "x": 772.942, "y": 261.547, "w": 192 },
+    { "label": "To-do list", "detail": "You got carried away from the time. Might as well stay up.", "align": "left", "x": 219.2, "y": 228.481, "w": 199.2 },
+    { "label": "\"Studying\"", "detail": "You gave yourself an extra 30 minutes.", "align": "left", "x": 266.28, "y": 371.45, "w": 151.2 },
+    { "label": "Laziness", "detail": "You hate sleeping. You see it as a big task — boring.", "align": "right", "x": 816.8, "y": 123.124, "w": 187.2 },
+    { "label": "Regret", "detail": "Now you're regretful and think it's pointless going to sleep.", "align": "left", "x": 422, "y": 86.1191, "w": 206.4 },
+    { "label": "Homework", "detail": "You see sleeping as boring.", "align": "right", "x": 602, "y": 121.877, "w": 124.8, "focused": true },
+    { "label": "Phone", "detail": "Watched that \"just\" one video.", "align": "right", "x": 872, "y": 330.51, "w": 132 },
+    { "label": "Night owl", "detail": "You think it's a waste of time you could use for something.", "align": "left", "x": 422, "y": 442.317, "w": 201.6 },
+    { "label": "No daytime free time", "detail": "You sit in front of a computer or phone after 7:30 PM.", "align": "right", "x": 602, "y": 193.407, "w": 268 },
+    { "label": "Fear of tomorrow", "detail": "Don't know what to do the next morning.", "align": "left", "x": 299.897, "y": 157.477, "w": 220 },
+    { "label": "Stress relief", "detail": "A feeling of hatred or fear for sleep after a busy day.", "align": "right", "x": 611.742, "y": 469.617, "w": 192 },
+    { "label": "Low self-control", "detail": "Self-control is already at its lowest at the end of the day.", "align": "right", "x": 648.61, "y": 398.16, "w": 220 },
+    { "label": "General procrastination", "detail": "You put off doing important things in your life.", "align": "left", "x": 331.614, "y": 299.702, "w": 304 },
+    { "label": "Too many goals", "detail": "You think you'll be able to cope with little sleep.", "align": "left", "x": 216, "y": 456.136, "w": 196 }
+  ],
+  "arrows": [
+    { "d": "M 591.4 288.3 Q 673.8 266.0 759.1 263.6", "head": "759.0916623469403,263.58777953141185 751.1039213988,267.734584873528 750.878098736146,259.9084626367377" },
+    { "d": "M 438.7 282.1 Q 339.3 242.4 232.8 231.8", "head": "232.80017300084967,231.80340788630392 241.25136900982335,228.70868883315757 240.4776973959034,236.49974892623646" },
+    { "d": "M 442.1 320.3 Q 366.5 363.1 279.7 367.5", "head": "279.7231325272186,367.5410846323862 287.61857896593085,363.22113954784794 288.014949970301,371.0404793644212" },
+    { "d": "M 562.7 270.6 Q 688.7 209.0 804.7 130.2", "head": "804.6911504972315,130.150753985863 800.1910048068304,137.94489850371508 795.7884519390489,131.47058669576663" },
+    { "d": "M 496.7 263.6 Q 448.2 187.1 427.4 99.0", "head": "427.4299730007184,99.02316959628865 433.1021546282213,106.01075541577015 425.48229363648466,107.8098951009427" },
+    { "d": "M 530.2 263.9 Q 580.8 208.2 595.7 134.4", "head": "595.6864030243217,134.3722744435275 597.9227889259962,143.08999077860008 590.2477409979412,141.54311507505778" },
+    { "d": "M 594.2 307.0 Q 727.0 308.2 858.1 329.3", "head": "858.0500089974223,329.3278244166398 849.4259664066981,331.90190471713066 850.6728717893209,324.1724537594663" },
+    { "d": "M 489.5 335.6 Q 446.8 375.0 429.5 430.5", "head": "429.4827526694649,430.4849450902541 428.16169420246706,421.58242833785346 435.63515049327555,423.91623128787467" },
+    { "d": "M 541.3 265.3 Q 551.8 221.8 593.0 204.1", "head": "592.9681725198417,204.10383548737207 587.0733672714549,210.90466419302194 583.9766306835277,203.71373882523062" },
+    { "d": "M 466.0 269.1 Q 394.3 208.9 311.5 165.3", "head": "311.51681511049094,165.28530432108752 320.51142805132645,165.59665307177488 316.8640683205583,172.52456416636343" },
+    { "d": "M 533.1 335.8 Q 581.8 389.1 604.6 457.5", "head": "604.6459234379571,457.5493784800515 598.3660570331737,451.102419666931 605.792372204913,448.6226962730529" },
+    { "d": "M 555.9 331.5 Q 584.9 377.0 637.2 390.0", "head": "637.240563412791,389.99087162279096 628.4321788908424,391.8381296214195 630.3181768902364,384.2393009823177" },
+    { "d": "M 428.3 299.9 Q 386.9 309.8 345.6 299.7", "head": "345.61383293609913,299.72530391663986 354.4142705863705,297.8405500431364 352.56065113179216,305.4473417490898" },
+    { "d": "M 458.2 328.4 Q 336.3 375.7 228.4 449.6", "head": "228.38287865577,449.6040057608593 232.85845483141466,441.7957269558984 237.28137632610526,448.25614107512916" }
+  ],
+  "footer": "Laziness vs. Procrastination — laziness is \"you won't do it,\" procrastination is \"you're putting it off.\" The bridge: \"If I can't finish it, why even start?\""
+}
