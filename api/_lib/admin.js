@@ -1,13 +1,7 @@
-/* Single catch-all handler for the dashboard API.
-   Reads/writes JSON files in the journal repo via the GitHub API.
-   All multi-file updates use the Git Trees API so each save produces
-   exactly one commit (and therefore one Vercel deploy).
-
-   Auth model: the user pastes their own GitHub PAT into the dashboard.
-   We forward it as the Authorization header on every request. The
-   function uses that same PAT to call GitHub — there is no server-side
-   GH_TOKEN env var. The repo and branch are inferred from Vercel's
-   built-in VERCEL_GIT_* env vars, with hardcoded fallbacks. */
+/* Shared helpers for the dashboard's serverless endpoints.
+   Lives under /api/_lib/ — the leading underscore tells Vercel not to
+   deploy this as its own function. The other files in /api/admin/
+   require it for GitHub access and entry processing. */
 
 const REPO_FALLBACK = 'uthmanajibade03-droid/journal';
 const BRANCH_FALLBACK = 'main';
@@ -24,7 +18,6 @@ function getBranch() {
 
 const GH = 'https://api.github.com';
 
-// ─── HTTP utilities ───────────────────────────────────────────────
 function send(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
@@ -57,7 +50,6 @@ function makeGh(token) {
 
 function b64decode(s) { return Buffer.from(s, 'base64').toString('utf8'); }
 
-// ─── Reading files from GitHub ────────────────────────────────────
 async function readJSON(ctx, path) {
   try {
     const r = await ctx.gh('/repos/' + ctx.repo + '/contents/' + path + '?ref=' + ctx.branch);
@@ -68,9 +60,7 @@ async function readJSON(ctx, path) {
   }
 }
 
-// ─── Committing multiple files in a single commit ────────────────
 async function commitFiles(ctx, message, files) {
-  // files: [{ path: 'data/foo.json', content: '...' | null }] (null = delete)
   const refData = await ctx.gh('/repos/' + ctx.repo + '/git/refs/heads/' + ctx.branch);
   const parentSha = refData.object.sha;
   const parentCommit = await ctx.gh('/repos/' + ctx.repo + '/git/commits/' + parentSha);
@@ -106,29 +96,14 @@ async function commitFiles(ctx, message, files) {
 }
 
 // ─── Auto-layout for branches and arrows ──────────────────────────
-// 6 positional slots around the centre node, in a 1024×600 stage.
 const SLOTS = [
-  // 0: bottom-left  · label right-aligned, arrow goes down-left
-  { x:  20, y: 430, w: 360, align: 'left',
-    arrowStart: [445, 340], arrowEnd: [380, 446] },
-  // 1: bottom-right · label left-aligned, arrow goes down-right
-  { x: 645, y: 430, w: 360, align: 'right',
-    arrowStart: [580, 340], arrowEnd: [640, 446] },
-  // 2: top-right    · label left-aligned, arrow goes up-right
-  { x: 645, y:  70, w: 360, align: 'right',
-    arrowStart: [580, 260], arrowEnd: [640, 124] },
-  // 3: top-left     · label right-aligned, arrow goes up-left
-  { x:  20, y:  70, w: 360, align: 'left',
-    arrowStart: [445, 260], arrowEnd: [380, 124] },
-  // 4: middle-left  · label right-aligned, arrow goes left
-  { x:   0, y: 268, w: 290, align: 'left',
-    arrowStart: [400, 300], arrowEnd: [296, 286] },
-  // 5: middle-right · label left-aligned, arrow goes right
-  { x: 735, y: 268, w: 290, align: 'right',
-    arrowStart: [624, 300], arrowEnd: [728, 286] }
+  { x:  20, y: 430, w: 360, align: 'left',  arrowStart: [445, 340], arrowEnd: [380, 446] },
+  { x: 645, y: 430, w: 360, align: 'right', arrowStart: [580, 340], arrowEnd: [640, 446] },
+  { x: 645, y:  70, w: 360, align: 'right', arrowStart: [580, 260], arrowEnd: [640, 124] },
+  { x:  20, y:  70, w: 360, align: 'left',  arrowStart: [445, 260], arrowEnd: [380, 124] },
+  { x:   0, y: 268, w: 290, align: 'left',  arrowStart: [400, 300], arrowEnd: [296, 286] },
+  { x: 735, y: 268, w: 290, align: 'right', arrowStart: [624, 300], arrowEnd: [728, 286] }
 ];
-
-// For N branches, pick slot indices so the layout looks balanced.
 const SLOT_ORDER = {
   1: [2],
   2: [3, 1],
@@ -179,7 +154,6 @@ function autoLayout(branches) {
       head: arrowHeadPoints(x1, y1, x2, y2)
     });
   }
-  // Any branches beyond slot 6 just don't render — keep them in data
   for (let i = n; i < branches.length; i++) positioned.push(branches[i]);
   return { branches: positioned, arrows: arrows };
 }
@@ -204,7 +178,6 @@ function manifestScribble(text) {
   return { scribbleViewBox: shape.viewBox, scribblePath: shape.paths[0] };
 }
 
-// ─── Manifest helpers ─────────────────────────────────────────────
 function entryToManifestRow(entry, existingRow) {
   const row = Object.assign({}, existingRow || {}, {
     id: entry.id,
@@ -229,7 +202,6 @@ async function readManifest(ctx) {
   return m || { entries: [] };
 }
 
-// ─── Validation ───────────────────────────────────────────────────
 const SLUG = /^[a-z0-9][a-z0-9-]*$/;
 function validateEntry(data) {
   if (!data || typeof data !== 'object') return 'invalid body';
@@ -240,31 +212,43 @@ function validateEntry(data) {
   return null;
 }
 
-// ─── Route handlers ───────────────────────────────────────────────
-async function listEntries(ctx, req, res) {
-  const manifest = await readManifest(ctx);
-  send(res, 200, { entries: manifest.entries });
+function readBody(req) {
+  return new Promise(function (resolve, reject) {
+    if (req.body) return resolve(req.body);
+    let data = '';
+    req.on('data', function (c) { data += c; });
+    req.on('end', function () {
+      if (!data) return resolve(null);
+      try { resolve(JSON.parse(data)); }
+      catch (e) { reject(new Error('invalid JSON body')); }
+    });
+    req.on('error', reject);
+  });
 }
 
-async function getEntry(ctx, req, res, id) {
-  const entry = await readJSON(ctx, 'data/' + id + '.json');
-  if (!entry) return send(res, 404, { error: 'not found' });
-  const manifest = await readManifest(ctx);
-  const row = manifest.entries.find(function (e) { return e.id === id; }) || {};
-  // Merge manifest metadata back onto the entry shape used by the editor
-  send(res, 200, Object.assign({
-    n: row.n,
-    date: row.date,
-    dateLabel: row.dateLabel,
-    readMin: row.readMin,
-    teaser: row.teaser,
-    published: row.published !== false
-  }, entry));
+// ─── Common request bootstrap ────────────────────────────────────
+function makeCtxOrReject(req, res) {
+  const auth = req.headers['authorization'] || '';
+  const token = auth.replace(/^Bearer\s+/i, '').trim();
+  if (!token) {
+    send(res, 401, { error: 'missing GitHub token' });
+    return null;
+  }
+  return { gh: makeGh(token), repo: getRepo(), branch: getBranch() };
 }
 
-async function upsertEntry(ctx, req, res, body, isNew, existingId) {
+function reportError(res, e) {
+  console.error('admin api error:', e);
+  const status = e.status === 401 ? 401 :
+                 e.status === 403 ? 403 :
+                 e.status === 404 ? 404 : 500;
+  send(res, status, { error: e.message || 'internal error' });
+}
+
+// ─── Entry write logic, shared by entries.js and entry.js ────────
+async function upsertEntry(ctx, body, isNew, existingId) {
   const err = validateEntry(body);
-  if (err) return send(res, 400, { error: err });
+  if (err) { const e = new Error(err); e.status = 400; throw e; }
 
   const manifest = await readManifest(ctx);
   let existing = null;
@@ -272,10 +256,8 @@ async function upsertEntry(ctx, req, res, body, isNew, existingId) {
     existing = await readJSON(ctx, 'data/' + existingId + '.json');
   }
 
-  // If editing and slug changed, treat as rename: delete old, create new
   const isRename = !isNew && existingId && existingId !== body.id;
 
-  // Preserve existing branch layout by index, auto-fill any missing
   let branches = body.branches;
   let arrows = null;
   let center = (existing && existing.center) || null;
@@ -285,7 +267,6 @@ async function upsertEntry(ctx, req, res, body, isNew, existingId) {
   });
 
   if (existing && Array.isArray(existing.branches) && !allHaveLayout) {
-    // Merge: copy x/y/w/align from existing[i] into new branches[i]
     branches = branches.map(function (b, i) {
       const prev = existing.branches[i];
       if (prev && typeof prev.x === 'number') {
@@ -324,14 +305,7 @@ async function upsertEntry(ctx, req, res, body, isNew, existingId) {
     intro: body.intro,
     center: center,
     branches: branches.map(function (b) {
-      const out = {
-        label: b.label,
-        detail: b.detail,
-        align: b.align,
-        x: b.x,
-        y: b.y,
-        w: b.w
-      };
+      const out = { label: b.label, detail: b.detail, align: b.align, x: b.x, y: b.y, w: b.w };
       if (b.focused) out.focused = true;
       return out;
     }),
@@ -339,7 +313,6 @@ async function upsertEntry(ctx, req, res, body, isNew, existingId) {
     footer: body.footer || ''
   };
 
-  // Update manifest
   const oldRow = manifest.entries.find(function (e) { return e.id === (isRename ? existingId : body.id); });
   const newRow = entryToManifestRow(entry, oldRow);
   if (oldRow) {
@@ -349,7 +322,6 @@ async function upsertEntry(ctx, req, res, body, isNew, existingId) {
   }
   manifest.entries.sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
 
-  // Build commit
   const files = [
     { path: 'data/' + entry.id + '.json', content: JSON.stringify(entry, null, 2) + '\n' },
     { path: 'data/index.json', content: JSON.stringify(manifest, null, 2) + '\n' }
@@ -361,105 +333,22 @@ async function upsertEntry(ctx, req, res, body, isNew, existingId) {
               'admin: update entry "' + entry.title + '"';
   await commitFiles(ctx, msg, files);
 
-  // Also drop the renamed row from manifest if we renamed
   if (isRename) {
     manifest.entries = manifest.entries.filter(function (e) { return e.id !== existingId; });
   }
 
-  send(res, 200, { entry: entry, entries: manifest.entries });
+  return { entry: entry, entries: manifest.entries };
 }
 
-async function deleteEntry(ctx, req, res, id) {
-  const manifest = await readManifest(ctx);
-  const exists = manifest.entries.find(function (e) { return e.id === id; });
-  if (!exists) return send(res, 404, { error: 'not found' });
-  manifest.entries = manifest.entries.filter(function (e) { return e.id !== id; });
-
-  const files = [
-    { path: 'data/' + id + '.json', content: null },
-    { path: 'data/index.json', content: JSON.stringify(manifest, null, 2) + '\n' }
-  ];
-  await commitFiles(ctx, 'admin: delete entry "' + exists.title + '"', files);
-  send(res, 200, { entries: manifest.entries });
-}
-
-async function getSettings(ctx, req, res) {
-  const s = await readJSON(ctx, 'data/settings.json');
-  send(res, 200, s || {});
-}
-
-async function putSettings(ctx, req, res, body) {
-  if (!body || typeof body !== 'object') return send(res, 400, { error: 'invalid body' });
-  await commitFiles(ctx, 'admin: update site settings', [
-    { path: 'data/settings.json', content: JSON.stringify(body, null, 2) + '\n' }
-  ]);
-  send(res, 200, { settings: body });
-}
-
-// ─── Body parsing ─────────────────────────────────────────────────
-function readBody(req) {
-  return new Promise(function (resolve, reject) {
-    if (req.body) return resolve(req.body);
-    let data = '';
-    req.on('data', function (c) { data += c; });
-    req.on('end', function () {
-      if (!data) return resolve(null);
-      try { resolve(JSON.parse(data)); }
-      catch (e) { reject(new Error('invalid JSON body')); }
-    });
-    req.on('error', reject);
-  });
-}
-
-// ─── Main handler ─────────────────────────────────────────────────
-module.exports = async function handler(req, res) {
-  try {
-    const auth = req.headers['authorization'] || '';
-    const token = auth.replace(/^Bearer\s+/i, '').trim();
-    if (!token) {
-      return send(res, 401, { error: 'missing GitHub token in Authorization header' });
-    }
-
-    const ctx = {
-      gh: makeGh(token),
-      repo: getRepo(),
-      branch: getBranch()
-    };
-
-    const segments = (req.query && req.query.path) || [];
-    const path = Array.isArray(segments) ? segments : [segments].filter(Boolean);
-    const method = req.method;
-
-    if (path[0] === 'entries' && !path[1]) {
-      if (method === 'GET') return await listEntries(ctx, req, res);
-      if (method === 'POST') {
-        const body = await readBody(req);
-        return await upsertEntry(ctx, req, res, body, true, null);
-      }
-    }
-    if (path[0] === 'entries' && path[1]) {
-      const id = path[1];
-      if (method === 'GET') return await getEntry(ctx, req, res, id);
-      if (method === 'PUT') {
-        const body = await readBody(req);
-        return await upsertEntry(ctx, req, res, body, false, id);
-      }
-      if (method === 'DELETE') return await deleteEntry(ctx, req, res, id);
-    }
-    if (path[0] === 'settings' && !path[1]) {
-      if (method === 'GET') return await getSettings(ctx, req, res);
-      if (method === 'PUT') {
-        const body = await readBody(req);
-        return await putSettings(ctx, req, res, body);
-      }
-    }
-
-    send(res, 404, { error: 'no route for ' + method + ' /' + path.join('/') });
-  } catch (e) {
-    console.error('admin api error:', e);
-    const status = e.status === 401 ? 401 :
-                   e.status === 403 ? 403 :
-                   e.status === 404 ? 404 : 500;
-    send(res, status, { error: e.message || 'internal error' });
-  }
+module.exports = {
+  send,
+  readJSON,
+  readManifest,
+  commitFiles,
+  readBody,
+  makeCtxOrReject,
+  reportError,
+  validateEntry,
+  upsertEntry,
+  entryToManifestRow
 };

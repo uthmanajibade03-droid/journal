@@ -11,6 +11,18 @@
   };
 
   // ─── API helpers ──────────────────────────────────────────────────
+  // Logical resource paths used in this file:
+  //   'entries'         → /api/admin/entries     (list, create)
+  //   'entries/<slug>'  → /api/admin/entry?id=…  (load, update, delete)
+  //   'settings'        → /api/admin/settings    (load, save)
+  function routeFor(path) {
+    var parts = String(path).split('/');
+    if (parts[0] === 'entries' && parts[1]) {
+      return '/api/admin/entry?id=' + encodeURIComponent(parts[1]);
+    }
+    return '/api/admin/' + parts[0];
+  }
+
   function api(path, opts) {
     opts = opts || {};
     opts.headers = Object.assign({
@@ -18,7 +30,7 @@
       'Authorization': 'Bearer ' + state.token
     }, opts.headers || {});
     if (opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
-    return fetch('/api/admin/' + path, opts).then(function (r) {
+    return fetch(routeFor(path), opts).then(function (r) {
       if (r.status === 401) { signOut(); throw new Error('unauthorized'); }
       if (!r.ok) {
         return r.text().then(function (t) {
