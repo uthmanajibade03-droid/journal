@@ -35,13 +35,13 @@
     return '<svg class="arrows-svg" viewBox="0 0 ' + VW + ' ' + VH + '" preserveAspectRatio="none" aria-hidden="true">' + parts + '</svg>';
   }
 
-  function branchHTML(b) {
+  function branchHTML(b, i) {
     var leftPct = (b.x / VW) * 100;
     var topPct = (b.y / VH) * 100;
     var widthPct = (b.w / VW) * 100;
     var cls = 'branch align-' + (b.align || 'right') + (b.focused ? ' focused' : '');
     return (
-      '<div class="' + cls + '" style="left:' + leftPct.toFixed(3) + '%;top:' + topPct.toFixed(3) + '%;width:' + widthPct.toFixed(3) + '%">' +
+      '<div class="' + cls + '" style="left:' + leftPct.toFixed(3) + '%;top:' + topPct.toFixed(3) + '%;width:' + widthPct.toFixed(3) + '%;--i:' + i + '">' +
         '<div class="branch-label">' + escapeHTML(b.label) + '</div>' +
         '<div class="branch-detail">' + escapeHTML(b.detail) + '</div>' +
       '</div>'
@@ -76,7 +76,15 @@
 
     document.title = title + ' — uthman';
 
-    var branchesHTML = (entry.branches || []).map(branchHTML).join('');
+    // For mobile (stacked) view, put the focused branch first so it leads.
+    // For desktop, source order is fine since branches are absolutely positioned.
+    var branchList = (entry.branches || []).slice();
+    var focusedIdx = branchList.findIndex(function (b) { return b.focused; });
+    if (focusedIdx > 0) {
+      var focused = branchList.splice(focusedIdx, 1)[0];
+      branchList.unshift(focused);
+    }
+    var branchesHTML = branchList.map(branchHTML).join('');
 
     main.innerHTML =
       '<div class="entry-head">' +
@@ -84,7 +92,7 @@
         '<h1 class="entry-title">' + escapeHTML(title) + '</h1>' +
         '<p class="entry-meta-row">' + readMin + ' min read · ' + escapeHTML(dateLabel) + '</p>' +
       '</div>' +
-      '<div class="mindmap">' +
+      '<div class="mindmap" id="mindmap">' +
         '<div class="mindmap-stage">' +
           '<div class="intro-card">' + escapeHTML(entry.intro || '') + '</div>' +
           arrowsSVG(entry.arrows) +
@@ -97,6 +105,14 @@
         '</div>' +
       '</div>' +
       renderAside(entry.id, manifest);
+
+    // Trigger the staggered fade-in
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var mm = document.getElementById('mindmap');
+        if (mm) mm.classList.add('is-ready');
+      });
+    });
   }
 
   function renderError(msg, sub) {
