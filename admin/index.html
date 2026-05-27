@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div id="login" class="login-wrap">
+    <form id="login-form" class="login-card">
+      <h1>Dashboard</h1>
+      <p class="muted">Enter your admin token.</p>
+      <input id="token-input" type="password" autocomplete="current-password" placeholder="Token" required />
+      <button type="submit">Continue</button>
+      <p id="login-error" class="login-error" hidden></p>
+    </form>
+  </div>
+
+  <div id="app" hidden>
+    <header class="app-header">
+      <div class="app-brand">
+        <span class="brand-mark">uthman</span>
+        <span class="brand-sub">dashboard</span>
+      </div>
+      <nav class="app-nav">
+        <button class="nav-btn is-active" data-view="entries">Entries</button>
+        <button class="nav-btn" data-view="settings">Settings</button>
+        <a class="nav-btn nav-out" href="/" target="_blank" rel="noopener">View site ↗</a>
+        <button class="nav-btn nav-out" id="logout-btn">Sign out</button>
+      </nav>
+    </header>
+
+    <main class="app-main">
+      <!-- Entries list -->
+      <section class="view" id="view-entries">
+        <div class="view-head">
+          <h2>Entries</h2>
+          <button class="primary" id="new-entry-btn">+ New entry</button>
+        </div>
+        <div class="entries-table" id="entries-table">
+          <p class="muted">Loading…</p>
+        </div>
+      </section>
+
+      <!-- Entry editor (used for both edit and create) -->
+      <section class="view" id="view-editor" hidden>
+        <div class="view-head">
+          <button class="back-btn" id="editor-back">← Back to entries</button>
+          <div class="view-head-actions">
+            <span id="editor-status" class="status muted"></span>
+            <button class="ghost" id="editor-delete" hidden>Delete</button>
+            <button class="primary" id="editor-save">Save</button>
+          </div>
+        </div>
+
+        <form id="editor-form" class="editor-form" onsubmit="return false">
+          <div class="row two">
+            <label>
+              <span>Title</span>
+              <input type="text" name="title" required />
+            </label>
+            <label>
+              <span>Slug</span>
+              <input type="text" name="id" pattern="[a-z0-9-]+" required />
+            </label>
+          </div>
+
+          <div class="row three">
+            <label>
+              <span>Number</span>
+              <input type="number" name="n" min="1" required />
+            </label>
+            <label>
+              <span>Date</span>
+              <input type="date" name="date" required />
+            </label>
+            <label>
+              <span>Read time (min)</span>
+              <input type="number" name="readMin" min="1" max="60" required />
+            </label>
+          </div>
+
+          <label class="row">
+            <span>Teaser (shown when hovering the row on the index)</span>
+            <input type="text" name="teaser" required />
+          </label>
+
+          <label class="row">
+            <span>Intro (the small handwritten line above the map)</span>
+            <textarea name="intro" rows="2" required></textarea>
+          </label>
+
+          <label class="row">
+            <span>Center label (defaults to title if blank)</span>
+            <input type="text" name="centerText" />
+          </label>
+
+          <div class="row">
+            <div class="branches-head">
+              <span>Branches</span>
+              <button type="button" class="ghost small" id="add-branch">+ Add branch</button>
+            </div>
+            <p class="hint">Branches are auto-arranged in a ring around the center. Toggle "Focused" to highlight one.</p>
+            <div id="branches-list" class="branches-editor"></div>
+          </div>
+
+          <label class="row">
+            <span>Footer (the small italic line at the bottom of the map)</span>
+            <textarea name="footer" rows="2"></textarea>
+          </label>
+
+          <div class="row two">
+            <label class="checkbox">
+              <input type="checkbox" name="published" />
+              <span>Published — visible on the public site</span>
+            </label>
+            <span></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Site settings -->
+      <section class="view" id="view-settings" hidden>
+        <div class="view-head">
+          <h2>Site settings</h2>
+          <div class="view-head-actions">
+            <span id="settings-status" class="status muted"></span>
+            <button class="primary" id="settings-save">Save</button>
+          </div>
+        </div>
+
+        <form id="settings-form" class="editor-form" onsubmit="return false">
+          <div class="row two">
+            <label>
+              <span>Brand name</span>
+              <input type="text" name="brand" required />
+            </label>
+            <label>
+              <span>Accent color</span>
+              <span class="color-row">
+                <input type="color" name="accent" />
+                <input type="text" name="accentHex" pattern="#[0-9a-fA-F]{6}" />
+              </span>
+            </label>
+          </div>
+
+          <label class="row">
+            <span>Hero tagline (one line per row; the last line is italicised)</span>
+            <textarea name="heroTagline" rows="4" required></textarea>
+          </label>
+
+          <div class="row two">
+            <label>
+              <span>Italic from line</span>
+              <input type="number" name="heroEmFromLine" min="1" max="10" required />
+            </label>
+            <span></span>
+          </div>
+
+          <label class="row">
+            <span>Footer tagline (single line)</span>
+            <input type="text" name="footerTagline" required />
+          </label>
+
+          <div class="row two">
+            <label>
+              <span>Subscribe tagline</span>
+              <input type="text" name="subscribeTagline" required />
+            </label>
+            <label>
+              <span>Bottom strapline</span>
+              <input type="text" name="bottomTag" required />
+            </label>
+          </div>
+
+          <div class="row three">
+            <label>
+              <span>Year</span>
+              <input type="number" name="year" min="2020" max="2100" required />
+            </label>
+            <label>
+              <span>Contact email</span>
+              <input type="email" name="email" required />
+            </label>
+            <label>
+              <span>Twitter / X URL</span>
+              <input type="url" name="twitter" />
+            </label>
+          </div>
+
+          <label class="row">
+            <span>RSS path</span>
+            <input type="text" name="rssPath" placeholder="/feed.xml" />
+          </label>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

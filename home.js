@@ -49,7 +49,8 @@
   fetch('data/index.json')
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function (data) {
-      entries = (data && data.entries) || [];
+      var all = (data && data.entries) || [];
+      entries = all.filter(function (e) { return e.published !== false; });
       render(false);
     })
     .catch(function (err) {
