@@ -395,7 +395,7 @@ body.entry main.entry-main {
   letter-spacing: 0.22em; text-transform: uppercase;
   color: var(--muted); margin: 0 0 18px;
 }
-.entry-title-wrap { position: relative; display: inline-block; }
+.entry-title-wrap { position: relative; display: inline-block; z-index: 0; }
 .entry-title {
   font-family: var(--sans);
   font-weight: 500;
