@@ -8,15 +8,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="/admin/admin.css" />
 </head>
 <body>
   <div id="login" class="login-wrap">
     <form id="login-form" class="login-card">
       <h1>Dashboard</h1>
-      <p class="muted">Enter your admin token.</p>
-      <input id="token-input" type="password" autocomplete="current-password" placeholder="Token" required />
+      <p class="muted">Paste a GitHub Personal Access Token with <strong>Contents: read &amp; write</strong> permission on this repo.</p>
+      <input id="token-input" type="password" autocomplete="current-password" placeholder="github_pat_…" required />
       <button type="submit">Continue</button>
+      <p class="login-help">
+        Don't have one yet?
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a fine-grained token →</a>
+        <br/><span class="muted">Choose this repo only, give it Contents: read &amp; write.</span>
+      </p>
       <p id="login-error" class="login-error" hidden></p>
     </form>
   </div>
@@ -202,6 +207,6 @@
     </main>
   </div>
 
-  <script src="admin.js"></script>
+  <script src="/admin/admin.js"></script>
 </body>
 </html>

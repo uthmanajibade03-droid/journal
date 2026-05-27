@@ -122,7 +122,16 @@
     }).catch(function (err) {
       var loginErr = $('#login-error');
       loginErr.hidden = false;
-      loginErr.textContent = err.message === 'unauthorized' ? 'Invalid token.' : ('Error: ' + err.message);
+      var m = err.message || '';
+      if (m === 'unauthorized' || /\b401\b/.test(m) || /Bad credentials/i.test(m)) {
+        loginErr.textContent = "GitHub didn't accept that token. Check it has Contents: read & write on this repo.";
+      } else if (/\b403\b/.test(m)) {
+        loginErr.textContent = "Token rejected with 403 — the PAT exists but isn't scoped to this repo or lacks Contents write.";
+      } else if (/\b404\b/.test(m)) {
+        loginErr.textContent = "Couldn't reach the repo. The deployment may still be building, or the dashboard's repo config is wrong.";
+      } else {
+        loginErr.textContent = m.slice(0, 240);
+      }
     });
   }
 

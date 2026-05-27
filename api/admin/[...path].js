@@ -1,12 +1,26 @@
 /* Single catch-all handler for the dashboard API.
    Reads/writes JSON files in the journal repo via the GitHub API.
    All multi-file updates use the Git Trees API so each save produces
-   exactly one commit (and therefore one Vercel deploy). */
+   exactly one commit (and therefore one Vercel deploy).
 
-const REPO = process.env.GH_REPO;                  // "owner/name"
-const BRANCH = process.env.GH_BRANCH || 'main';
-const GH_TOKEN = process.env.GH_TOKEN;             // PAT with contents:write
-const ADMIN_TOKEN = process.env.DASHBOARD_TOKEN;   // dashboard auth
+   Auth model: the user pastes their own GitHub PAT into the dashboard.
+   We forward it as the Authorization header on every request. The
+   function uses that same PAT to call GitHub — there is no server-side
+   GH_TOKEN env var. The repo and branch are inferred from Vercel's
+   built-in VERCEL_GIT_* env vars, with hardcoded fallbacks. */
+
+const REPO_FALLBACK = 'uthmanajibade03-droid/journal';
+const BRANCH_FALLBACK = 'main';
+
+function getRepo() {
+  if (process.env.VERCEL_GIT_REPO_OWNER && process.env.VERCEL_GIT_REPO_SLUG) {
+    return process.env.VERCEL_GIT_REPO_OWNER + '/' + process.env.VERCEL_GIT_REPO_SLUG;
+  }
+  return process.env.GH_REPO || REPO_FALLBACK;
+}
+function getBranch() {
+  return process.env.GH_BRANCH || process.env.VERCEL_GIT_COMMIT_REF || BRANCH_FALLBACK;
+}
 
 const GH = 'https://api.github.com';
 
@@ -18,43 +32,48 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function gh(path, init) {
-  init = init || {};
-  init.headers = Object.assign({
-    'Authorization': 'Bearer ' + GH_TOKEN,
-    'Accept': 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-    'User-Agent': 'journal-dashboard'
-  }, init.headers || {});
-  if (init.body && typeof init.body !== 'string') init.body = JSON.stringify(init.body);
-  const r = await fetch(GH + path, init);
-  const text = await r.text();
-  if (!r.ok) {
-    throw new Error('GitHub ' + r.status + ' on ' + init.method + ' ' + path + ': ' + text);
-  }
-  return text ? JSON.parse(text) : null;
+function makeGh(token) {
+  return async function gh(path, init) {
+    init = init || {};
+    init.headers = Object.assign({
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'journal-dashboard'
+    }, init.headers || {});
+    if (init.body && typeof init.body !== 'string') init.body = JSON.stringify(init.body);
+    const r = await fetch(GH + path, init);
+    const text = await r.text();
+    if (!r.ok) {
+      let msg;
+      try { msg = JSON.parse(text).message || text; } catch (e) { msg = text; }
+      const err = new Error('GitHub ' + r.status + ': ' + msg);
+      err.status = r.status;
+      throw err;
+    }
+    return text ? JSON.parse(text) : null;
+  };
 }
 
-function b64encode(s) { return Buffer.from(s, 'utf8').toString('base64'); }
 function b64decode(s) { return Buffer.from(s, 'base64').toString('utf8'); }
 
 // ─── Reading files from GitHub ────────────────────────────────────
-async function readJSON(path) {
+async function readJSON(ctx, path) {
   try {
-    const r = await gh('/repos/' + REPO + '/contents/' + path + '?ref=' + BRANCH);
+    const r = await ctx.gh('/repos/' + ctx.repo + '/contents/' + path + '?ref=' + ctx.branch);
     return r && r.content ? JSON.parse(b64decode(r.content.replace(/\n/g, ''))) : null;
   } catch (e) {
-    if (/\b404\b/.test(e.message)) return null;
+    if (e.status === 404) return null;
     throw e;
   }
 }
 
 // ─── Committing multiple files in a single commit ────────────────
-async function commitFiles(message, files) {
+async function commitFiles(ctx, message, files) {
   // files: [{ path: 'data/foo.json', content: '...' | null }] (null = delete)
-  const refData = await gh('/repos/' + REPO + '/git/refs/heads/' + BRANCH);
+  const refData = await ctx.gh('/repos/' + ctx.repo + '/git/refs/heads/' + ctx.branch);
   const parentSha = refData.object.sha;
-  const parentCommit = await gh('/repos/' + REPO + '/git/commits/' + parentSha);
+  const parentCommit = await ctx.gh('/repos/' + ctx.repo + '/git/commits/' + parentSha);
   const baseTreeSha = parentCommit.tree.sha;
 
   const tree = [];
@@ -62,7 +81,7 @@ async function commitFiles(message, files) {
     if (f.content === null || f.content === undefined) {
       tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
     } else {
-      const blob = await gh('/repos/' + REPO + '/git/blobs', {
+      const blob = await ctx.gh('/repos/' + ctx.repo + '/git/blobs', {
         method: 'POST',
         body: { content: f.content, encoding: 'utf-8' }
       });
@@ -70,17 +89,17 @@ async function commitFiles(message, files) {
     }
   }
 
-  const newTree = await gh('/repos/' + REPO + '/git/trees', {
+  const newTree = await ctx.gh('/repos/' + ctx.repo + '/git/trees', {
     method: 'POST',
     body: { base_tree: baseTreeSha, tree: tree }
   });
 
-  const commit = await gh('/repos/' + REPO + '/git/commits', {
+  const commit = await ctx.gh('/repos/' + ctx.repo + '/git/commits', {
     method: 'POST',
     body: { message: message, tree: newTree.sha, parents: [parentSha] }
   });
 
-  await gh('/repos/' + REPO + '/git/refs/heads/' + BRANCH, {
+  await ctx.gh('/repos/' + ctx.repo + '/git/refs/heads/' + ctx.branch, {
     method: 'PATCH',
     body: { sha: commit.sha, force: false }
   });
@@ -205,8 +224,8 @@ function entryToManifestRow(entry, existingRow) {
   return row;
 }
 
-async function readManifest() {
-  const m = await readJSON('data/index.json');
+async function readManifest(ctx) {
+  const m = await readJSON(ctx, 'data/index.json');
   return m || { entries: [] };
 }
 
@@ -222,15 +241,15 @@ function validateEntry(data) {
 }
 
 // ─── Route handlers ───────────────────────────────────────────────
-async function listEntries(req, res) {
-  const manifest = await readManifest();
+async function listEntries(ctx, req, res) {
+  const manifest = await readManifest(ctx);
   send(res, 200, { entries: manifest.entries });
 }
 
-async function getEntry(req, res, id) {
-  const entry = await readJSON('data/' + id + '.json');
+async function getEntry(ctx, req, res, id) {
+  const entry = await readJSON(ctx, 'data/' + id + '.json');
   if (!entry) return send(res, 404, { error: 'not found' });
-  const manifest = await readManifest();
+  const manifest = await readManifest(ctx);
   const row = manifest.entries.find(function (e) { return e.id === id; }) || {};
   // Merge manifest metadata back onto the entry shape used by the editor
   send(res, 200, Object.assign({
@@ -243,14 +262,14 @@ async function getEntry(req, res, id) {
   }, entry));
 }
 
-async function upsertEntry(req, res, body, isNew, existingId) {
+async function upsertEntry(ctx, req, res, body, isNew, existingId) {
   const err = validateEntry(body);
   if (err) return send(res, 400, { error: err });
 
-  const manifest = await readManifest();
+  const manifest = await readManifest(ctx);
   let existing = null;
   if (!isNew && existingId) {
-    existing = await readJSON('data/' + existingId + '.json');
+    existing = await readJSON(ctx, 'data/' + existingId + '.json');
   }
 
   // If editing and slug changed, treat as rename: delete old, create new
@@ -340,7 +359,7 @@ async function upsertEntry(req, res, body, isNew, existingId) {
   const msg = isNew ? 'admin: add entry "' + entry.title + '"' :
               isRename ? 'admin: rename entry to "' + entry.title + '"' :
               'admin: update entry "' + entry.title + '"';
-  await commitFiles(msg, files);
+  await commitFiles(ctx, msg, files);
 
   // Also drop the renamed row from manifest if we renamed
   if (isRename) {
@@ -350,8 +369,8 @@ async function upsertEntry(req, res, body, isNew, existingId) {
   send(res, 200, { entry: entry, entries: manifest.entries });
 }
 
-async function deleteEntry(req, res, id) {
-  const manifest = await readManifest();
+async function deleteEntry(ctx, req, res, id) {
+  const manifest = await readManifest(ctx);
   const exists = manifest.entries.find(function (e) { return e.id === id; });
   if (!exists) return send(res, 404, { error: 'not found' });
   manifest.entries = manifest.entries.filter(function (e) { return e.id !== id; });
@@ -360,18 +379,18 @@ async function deleteEntry(req, res, id) {
     { path: 'data/' + id + '.json', content: null },
     { path: 'data/index.json', content: JSON.stringify(manifest, null, 2) + '\n' }
   ];
-  await commitFiles('admin: delete entry "' + exists.title + '"', files);
+  await commitFiles(ctx, 'admin: delete entry "' + exists.title + '"', files);
   send(res, 200, { entries: manifest.entries });
 }
 
-async function getSettings(req, res) {
-  const s = await readJSON('data/settings.json');
+async function getSettings(ctx, req, res) {
+  const s = await readJSON(ctx, 'data/settings.json');
   send(res, 200, s || {});
 }
 
-async function putSettings(req, res, body) {
+async function putSettings(ctx, req, res, body) {
   if (!body || typeof body !== 'object') return send(res, 400, { error: 'invalid body' });
-  await commitFiles('admin: update site settings', [
+  await commitFiles(ctx, 'admin: update site settings', [
     { path: 'data/settings.json', content: JSON.stringify(body, null, 2) + '\n' }
   ]);
   send(res, 200, { settings: body });
@@ -395,44 +414,52 @@ function readBody(req) {
 // ─── Main handler ─────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
   try {
-    if (!ADMIN_TOKEN || !GH_TOKEN || !REPO) {
-      return send(res, 500, { error: 'server missing DASHBOARD_TOKEN / GH_TOKEN / GH_REPO env vars' });
-    }
     const auth = req.headers['authorization'] || '';
-    const token = auth.replace(/^Bearer\s+/i, '');
-    if (token !== ADMIN_TOKEN) return send(res, 401, { error: 'unauthorized' });
+    const token = auth.replace(/^Bearer\s+/i, '').trim();
+    if (!token) {
+      return send(res, 401, { error: 'missing GitHub token in Authorization header' });
+    }
+
+    const ctx = {
+      gh: makeGh(token),
+      repo: getRepo(),
+      branch: getBranch()
+    };
 
     const segments = (req.query && req.query.path) || [];
     const path = Array.isArray(segments) ? segments : [segments].filter(Boolean);
     const method = req.method;
 
     if (path[0] === 'entries' && !path[1]) {
-      if (method === 'GET') return await listEntries(req, res);
+      if (method === 'GET') return await listEntries(ctx, req, res);
       if (method === 'POST') {
         const body = await readBody(req);
-        return await upsertEntry(req, res, body, true, null);
+        return await upsertEntry(ctx, req, res, body, true, null);
       }
     }
     if (path[0] === 'entries' && path[1]) {
       const id = path[1];
-      if (method === 'GET') return await getEntry(req, res, id);
+      if (method === 'GET') return await getEntry(ctx, req, res, id);
       if (method === 'PUT') {
         const body = await readBody(req);
-        return await upsertEntry(req, res, body, false, id);
+        return await upsertEntry(ctx, req, res, body, false, id);
       }
-      if (method === 'DELETE') return await deleteEntry(req, res, id);
+      if (method === 'DELETE') return await deleteEntry(ctx, req, res, id);
     }
     if (path[0] === 'settings' && !path[1]) {
-      if (method === 'GET') return await getSettings(req, res);
+      if (method === 'GET') return await getSettings(ctx, req, res);
       if (method === 'PUT') {
         const body = await readBody(req);
-        return await putSettings(req, res, body);
+        return await putSettings(ctx, req, res, body);
       }
     }
 
     send(res, 404, { error: 'no route for ' + method + ' /' + path.join('/') });
   } catch (e) {
     console.error('admin api error:', e);
-    send(res, 500, { error: e.message || 'internal error' });
+    const status = e.status === 401 ? 401 :
+                   e.status === 403 ? 403 :
+                   e.status === 404 ? 404 : 500;
+    send(res, status, { error: e.message || 'internal error' });
   }
 };
