@@ -328,13 +328,17 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   position: relative;
 }
 .tp-navbar {
-  height: 40px;
+  /* Tall enough that both the brand line AND the top of the entry card
+     sit behind it. Without that, Glass mode has nothing to blur and just
+     looks like a flat tint. */
+  height: 72px;
   position: absolute;
   inset: 0 0 auto 0;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   --nav-vis: 1;
-  transition: background 220ms ease, backdrop-filter 220ms ease, border-color 220ms ease;
+  transition: background 220ms ease, backdrop-filter 220ms ease,
+              box-shadow 220ms ease, border-color 220ms ease;
 }
 .theme-preview[data-navbar-style="fade"] .tp-navbar,
 .theme-preview:not([data-navbar-style]) .tp-navbar {
@@ -346,10 +350,17 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   -webkit-backdrop-filter: blur(2px);
 }
 .theme-preview[data-navbar-style="glass"] .tp-navbar {
-  background: color-mix(in srgb, var(--tp-navbar) calc(55% * var(--nav-vis)), transparent);
-  backdrop-filter: blur(18px) saturate(170%);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
-  border-bottom: 1px solid color-mix(in srgb, var(--tp-fg) calc(12% * var(--nav-vis)), transparent);
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, white calc(10% * var(--nav-vis)), transparent) 0%,
+      color-mix(in srgb, white calc(2% * var(--nav-vis)), transparent) 100%),
+    color-mix(in srgb, var(--tp-navbar) calc(18% * var(--nav-vis)), transparent);
+  backdrop-filter: blur(22px) saturate(190%) brightness(112%);
+  -webkit-backdrop-filter: blur(22px) saturate(190%) brightness(112%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white calc(40% * var(--nav-vis)), transparent),
+    inset 0 -1px 0 color-mix(in srgb, white calc(8% * var(--nav-vis)), transparent),
+    0 2px 14px color-mix(in srgb, black calc(22% * var(--nav-vis)), transparent);
 }
 .theme-preview[data-navbar-style="solid"] .tp-navbar {
   background: color-mix(in srgb, var(--tp-navbar) calc(100% * var(--nav-vis)), transparent);
@@ -363,12 +374,14 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
 }
 .theme-preview-frame {
   background: var(--tp-bg);
-  /* Generous top padding so the brand line sits partly UNDER the navbar
-     strip; that way Glass mode visibly blurs the text behind it. */
-  padding: 22px 22px 20px;
+  /* Small top padding so the brand line AND the top of the entry card
+     sit clearly UNDER the navbar strip. That gives Glass mode something
+     substantive to blur (text + a coloured pill), which is what makes
+     the iOS Liquid Glass effect actually read as glass. */
+  padding: 10px 22px 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   transition: background 200ms ease;
   position: relative;
 }
