@@ -134,6 +134,19 @@
           </div>
         </div>
 
+        <!-- Live preview of the public-site palette + brand text -->
+        <div class="theme-preview" id="theme-preview" aria-hidden="true">
+          <div class="theme-preview-frame">
+            <div class="tp-brand"><span class="tp-brand-text">uthman</span></div>
+            <div class="tp-card">
+              <div class="tp-title">Comparing</div>
+              <div class="tp-meta">4 MIN · MAY 2026<span class="tp-tag">▸ Latest</span></div>
+            </div>
+            <div class="tp-rule"></div>
+            <div class="tp-hint">background · panel · text · muted · <span class="tp-accent-name">accent</span></div>
+          </div>
+        </div>
+
         <form id="settings-form" class="editor-form" onsubmit="return false">
           <label class="row">
             <span>Brand name</span>
@@ -183,14 +196,25 @@
           <div class="row">
             <div class="branches-head">
               <span>Theme colors</span>
-              <span class="hint" style="margin:0">Tweak the public site palette.</span>
+              <button type="button" class="ghost small" id="suggest-palette" title="Generate a coherent dark palette from the current accent">Suggest palette from accent</button>
             </div>
+            <p class="hint">Each colour maps to a CSS variable used across the public site. Hover the preview above to see them in context.</p>
+
+            <div class="preset-row" id="preset-row">
+              <span class="preset-row-label">Presets:</span>
+              <button type="button" class="preset-swatch" data-preset="amber" title="Amber on Black (default)"><span style="background:#0a0a0a"></span><span style="background:#111111"></span><span style="background:#f6c54a"></span><span class="preset-name">Amber</span></button>
+              <button type="button" class="preset-swatch" data-preset="crimson" title="Crimson"><span style="background:#0c0608"></span><span style="background:#160c0e"></span><span style="background:#e3535a"></span><span class="preset-name">Crimson</span></button>
+              <button type="button" class="preset-swatch" data-preset="forest" title="Forest"><span style="background:#0a0e0a"></span><span style="background:#101410"></span><span style="background:#7dc080"></span><span class="preset-name">Forest</span></button>
+              <button type="button" class="preset-swatch" data-preset="steel" title="Steel"><span style="background:#0b0e12"></span><span style="background:#13171c"></span><span style="background:#5d9bff"></span><span class="preset-name">Steel</span></button>
+              <button type="button" class="preset-swatch" data-preset="sand" title="Sand on Cream (light)"><span style="background:#f5efe1"></span><span style="background:#fffbf0"></span><span style="background:#9e6b21"></span><span class="preset-name">Sand</span></button>
+            </div>
+
             <div class="colors-grid" id="colors-grid">
-              <label class="color-field"><span>Background</span><span class="color-row"><input type="color" data-color-key="bg" /><input type="text" data-color-hex="bg" pattern="#[0-9a-fA-F]{6}" /></span></label>
-              <label class="color-field"><span>Panel</span><span class="color-row"><input type="color" data-color-key="panel" /><input type="text" data-color-hex="panel" pattern="#[0-9a-fA-F]{6}" /></span></label>
-              <label class="color-field"><span>Text</span><span class="color-row"><input type="color" data-color-key="fg" /><input type="text" data-color-hex="fg" pattern="#[0-9a-fA-F]{6}" /></span></label>
-              <label class="color-field"><span>Muted</span><span class="color-row"><input type="color" data-color-key="muted" /><input type="text" data-color-hex="muted" pattern="#[0-9a-fA-F]{6}" /></span></label>
-              <label class="color-field"><span>Accent</span><span class="color-row"><input type="color" data-color-key="accent" /><input type="text" data-color-hex="accent" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Background</span><span class="color-desc">page colour behind everything</span><span class="color-row"><input type="color" data-color-key="bg" /><input type="text" data-color-hex="bg" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Panel</span><span class="color-desc">cards, form surfaces, footer</span><span class="color-row"><input type="color" data-color-key="panel" /><input type="text" data-color-hex="panel" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Text</span><span class="color-desc">main reading copy</span><span class="color-row"><input type="color" data-color-key="fg" /><input type="text" data-color-hex="fg" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Muted</span><span class="color-desc">dates, hints, secondary text</span><span class="color-row"><input type="color" data-color-key="muted" /><input type="text" data-color-hex="muted" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Accent</span><span class="color-desc">highlights, focused branch, links</span><span class="color-row"><input type="color" data-color-key="accent" /><input type="text" data-color-hex="accent" pattern="#[0-9a-fA-F]{6}" /></span></label>
             </div>
           </div>
 

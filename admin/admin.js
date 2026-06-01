@@ -11,6 +11,66 @@
     muted: '#8a8275',
     accent: '#f6c54a'
   };
+  var PALETTE_PRESETS = {
+    amber:   { bg:'#0a0a0a', panel:'#111111', fg:'#f5f1e8', muted:'#8a8275', accent:'#f6c54a' },
+    crimson: { bg:'#0c0608', panel:'#160c0e', fg:'#f3e9e9', muted:'#9a8585', accent:'#e3535a' },
+    forest:  { bg:'#0a0e0a', panel:'#101410', fg:'#eaf0e8', muted:'#8a948a', accent:'#7dc080' },
+    steel:   { bg:'#0b0e12', panel:'#13171c', fg:'#e5edf3', muted:'#7d8a99', accent:'#5d9bff' },
+    sand:    { bg:'#f5efe1', panel:'#fffbf0', fg:'#241f17', muted:'#7c6f56', accent:'#9e6b21' }
+  };
+
+  // ─── Tiny HSL helpers for the "Suggest palette" feature ──────────
+  function hexToHsl(hex) {
+    var h = String(hex || '').replace(/^#/, '');
+    if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
+    var r = parseInt(h.slice(0,2),16)/255, g = parseInt(h.slice(2,4),16)/255, b = parseInt(h.slice(4,6),16)/255;
+    var max = Math.max(r,g,b), min = Math.min(r,g,b);
+    var hh, ss, ll = (max+min)/2;
+    if (max === min) { hh = ss = 0; }
+    else {
+      var d = max-min;
+      ss = ll > 0.5 ? d/(2-max-min) : d/(max+min);
+      switch (max) {
+        case r: hh = (g-b)/d + (g<b?6:0); break;
+        case g: hh = (b-r)/d + 2; break;
+        case b: hh = (r-g)/d + 4; break;
+      }
+      hh /= 6;
+    }
+    return { h: hh*360, s: ss*100, l: ll*100 };
+  }
+  function hslToHex(h, s, l) {
+    h = ((h % 360) + 360) % 360 / 360;
+    s = Math.max(0, Math.min(100, s)) / 100;
+    l = Math.max(0, Math.min(100, l)) / 100;
+    var r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+      var hue2 = function (p, q, t) {
+        if (t<0) t+=1; if (t>1) t-=1;
+        if (t<1/6) return p+(q-p)*6*t;
+        if (t<1/2) return q;
+        if (t<2/3) return p+(q-p)*(2/3-t)*6;
+        return p;
+      };
+      var q = l<0.5 ? l*(1+s) : l+s-l*s;
+      var p = 2*l-q;
+      r = hue2(p,q,h+1/3); g = hue2(p,q,h); b = hue2(p,q,h-1/3);
+    }
+    var toHex = function (c) { var v = Math.round(c*255).toString(16); return v.length === 1 ? '0'+v : v; };
+    return '#' + toHex(r) + toHex(g) + toHex(b);
+  }
+  function suggestPaletteFromAccent(accentHex) {
+    var hsl = hexToHsl(accentHex);
+    // Dark background tinted toward accent hue, very muted.
+    return {
+      bg:     hslToHex(hsl.h, 12, 4),
+      panel:  hslToHex(hsl.h, 10, 7),
+      fg:     hslToHex(hsl.h, 14, 93),
+      muted:  hslToHex(hsl.h, 10, 55),
+      accent: accentHex
+    };
+  }
 
   var state = {
     token: null,
@@ -174,15 +234,40 @@
       });
     }
 
-    // Wire color picker <-> hex input for each theme colour
+    // Wire color picker <-> hex input for each theme colour, and update
+    // the live preview pane on every change.
     COLOR_KEYS.forEach(function (k) {
       var picker = $('#settings-form [data-color-key="' + k + '"]');
       var hex = $('#settings-form [data-color-hex="' + k + '"]');
       if (!picker || !hex) return;
-      picker.addEventListener('input', function () { hex.value = picker.value; });
-      hex.addEventListener('input', function () {
-        if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) picker.value = hex.value;
+      picker.addEventListener('input', function () {
+        hex.value = picker.value;
+        updatePreview();
       });
+      hex.addEventListener('input', function () {
+        if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) {
+          picker.value = hex.value;
+          updatePreview();
+        }
+      });
+    });
+
+    // Brand name typed into the form is reflected in the preview too.
+    var brandIn = $('#settings-form [name="brand"]');
+    if (brandIn) brandIn.addEventListener('input', updatePreview);
+
+    // Preset palette buttons
+    $$('.preset-swatch[data-preset]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        applyPalette(PALETTE_PRESETS[btn.dataset.preset]);
+      });
+    });
+
+    // "Suggest palette from accent" — derive bg/panel/fg/muted from the
+    // accent hue so they harmonise. The accent itself is preserved.
+    $('#suggest-palette').addEventListener('click', function () {
+      var accentHex = ($('#settings-form [data-color-hex="accent"]') || {}).value || COLOR_DEFAULTS.accent;
+      applyPalette(suggestPaletteFromAccent(accentHex));
     });
 
     // Slug auto-fill from title when slug is empty
@@ -443,6 +528,35 @@
     });
   }
 
+  // ─── Settings: live preview & palette helpers ────────────────────
+  function updatePreview() {
+    var preview = $('#theme-preview');
+    if (!preview) return;
+    var f = $('#settings-form');
+    COLOR_KEYS.forEach(function (k) {
+      var hex = f.querySelector('[data-color-hex="' + k + '"]');
+      var picker = f.querySelector('[data-color-key="' + k + '"]');
+      var v = (hex && hex.value.trim()) || (picker && picker.value) || COLOR_DEFAULTS[k];
+      preview.style.setProperty('--tp-' + k, v);
+    });
+    var brandIn = f.querySelector('[name="brand"]');
+    var brandEl = preview.querySelector('.tp-brand-text');
+    if (brandIn && brandEl) brandEl.textContent = brandIn.value || 'uthman';
+  }
+
+  function applyPalette(p) {
+    if (!p) return;
+    var f = $('#settings-form');
+    COLOR_KEYS.forEach(function (k) {
+      if (!p[k]) return;
+      var picker = f.querySelector('[data-color-key="' + k + '"]');
+      var hex = f.querySelector('[data-color-hex="' + k + '"]');
+      if (picker) picker.value = p[k];
+      if (hex) hex.value = p[k];
+    });
+    updatePreview();
+  }
+
   // ─── Settings ─────────────────────────────────────────────────────
   function addSocialRow(s) {
     var box = $('#socials-list');
@@ -486,6 +600,7 @@
       $('#socials-list').innerHTML = '';
       (s.socials || []).forEach(addSocialRow);
       if (!(s.socials || []).length) addSocialRow({ label: '', url: '' });
+      updatePreview();
       setStatus($('#settings-status'), '');
     }).catch(function (err) {
       setStatus($('#settings-status'), 'Load failed: ' + err.message, 'err');
