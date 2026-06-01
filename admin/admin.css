@@ -351,16 +351,22 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
 }
 .theme-preview[data-navbar-style="glass"] .tp-navbar {
   background:
+    radial-gradient(ellipse 70% 120% at 50% 0%,
+      color-mix(in srgb, white calc(22% * var(--nav-vis)), transparent) 0%,
+      transparent 70%),
     linear-gradient(180deg,
-      color-mix(in srgb, white calc(14% * var(--nav-vis)), transparent) 0%,
-      color-mix(in srgb, white calc(3% * var(--nav-vis)), transparent) 100%),
-    color-mix(in srgb, var(--tp-navbar) calc(6% * var(--nav-vis)), transparent);
-  backdrop-filter: blur(32px) saturate(200%) brightness(116%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(116%);
+      color-mix(in srgb, white calc(12% * var(--nav-vis)), transparent) 0%,
+      color-mix(in srgb, white calc(2% * var(--nav-vis)), transparent) 100%),
+    color-mix(in srgb, var(--tp-navbar) calc(5% * var(--nav-vis)), transparent);
+  backdrop-filter: blur(32px) saturate(210%) brightness(118%) contrast(106%);
+  -webkit-backdrop-filter: blur(32px) saturate(210%) brightness(118%) contrast(106%);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white calc(45% * var(--nav-vis)), transparent),
-    inset 0 -1px 0 color-mix(in srgb, white calc(10% * var(--nav-vis)), transparent),
-    0 2px 16px color-mix(in srgb, black calc(20% * var(--nav-vis)), transparent);
+    inset 0 1px 0 color-mix(in srgb, white calc(55% * var(--nav-vis)), transparent),
+    inset 1px 0 0 color-mix(in srgb, white calc(14% * var(--nav-vis)), transparent),
+    inset -1px 0 0 color-mix(in srgb, white calc(14% * var(--nav-vis)), transparent),
+    inset 0 -1px 0 color-mix(in srgb, black calc(8% * var(--nav-vis)), transparent),
+    0 1px 2px color-mix(in srgb, black calc(8% * var(--nav-vis)), transparent),
+    0 6px 20px color-mix(in srgb, black calc(14% * var(--nav-vis)), transparent);
 }
 .theme-preview[data-navbar-style="solid"] .tp-navbar {
   background: color-mix(in srgb, var(--tp-navbar) calc(100% * var(--nav-vis)), transparent);

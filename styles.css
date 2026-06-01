@@ -81,23 +81,43 @@ body:not([data-navbar-style]) .top-header {
   -webkit-backdrop-filter: blur(2px);
 }
 
-/* Glass — iOS Liquid Glass. The colour tint is intentionally tiny so
-   the bar reads as transparent even when nothing is scrolling beneath
-   it; the visual identity comes from the heavy blur, the saturation
-   and brightness boosts, the white top-edge highlight, and the soft
-   drop-shadow underneath. */
+/* Glass — iOS Liquid Glass recipe (the CSS-achievable subset of what
+   Apple ships in iOS 26). The look comes from FOUR layers working
+   together:
+
+     1. Strong backdrop blur + saturation + brightness + contrast on
+        whatever is scrolling beneath, so the content shows through but
+        liquefied.
+     2. A very faint colour tint (~5%) so the bar reads as a pane of
+        glass even when no content is directly underneath.
+     3. A top-anchored radial "specular" highlight that simulates light
+        catching the surface of the glass.
+     4. A multi-edge inner box-shadow rim — bright at the top edge,
+        gentle on the sides, slightly dark at the bottom — plus a soft
+        outer drop shadow that gives the bar its floating, dimensional
+        quality.
+
+   What CSS can't do that iOS does: true content-aware refraction at
+   the edges. We approximate that with a stronger top highlight + a
+   slight bottom shade so the bar still reads as a refractive object. */
 body[data-navbar-style="glass"] .top-header {
   background:
+    radial-gradient(ellipse 70% 120% at 50% 0%,
+      color-mix(in srgb, white calc(22% * var(--nav-vis)), transparent) 0%,
+      transparent 70%),
     linear-gradient(180deg,
-      color-mix(in srgb, white calc(14% * var(--nav-vis)), transparent) 0%,
-      color-mix(in srgb, white calc(3% * var(--nav-vis)), transparent) 100%),
-    color-mix(in srgb, var(--navbar) calc(6% * var(--nav-vis)), transparent);
-  backdrop-filter: blur(40px) saturate(200%) brightness(116%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(116%);
+      color-mix(in srgb, white calc(12% * var(--nav-vis)), transparent) 0%,
+      color-mix(in srgb, white calc(2% * var(--nav-vis)), transparent) 100%),
+    color-mix(in srgb, var(--navbar) calc(5% * var(--nav-vis)), transparent);
+  backdrop-filter: blur(42px) saturate(210%) brightness(118%) contrast(106%);
+  -webkit-backdrop-filter: blur(42px) saturate(210%) brightness(118%) contrast(106%);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white calc(45% * var(--nav-vis)), transparent),
-    inset 0 -1px 0 color-mix(in srgb, white calc(10% * var(--nav-vis)), transparent),
-    0 2px 18px color-mix(in srgb, black calc(20% * var(--nav-vis)), transparent);
+    inset 0 1px 0 color-mix(in srgb, white calc(55% * var(--nav-vis)), transparent),
+    inset 1px 0 0 color-mix(in srgb, white calc(14% * var(--nav-vis)), transparent),
+    inset -1px 0 0 color-mix(in srgb, white calc(14% * var(--nav-vis)), transparent),
+    inset 0 -1px 0 color-mix(in srgb, black calc(8% * var(--nav-vis)), transparent),
+    0 1px 2px color-mix(in srgb, black calc(8% * var(--nav-vis)), transparent),
+    0 6px 22px color-mix(in srgb, black calc(14% * var(--nav-vis)), transparent);
   border-bottom: none;
 }
 
