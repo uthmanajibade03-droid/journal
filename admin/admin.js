@@ -3,10 +3,20 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   var TOKEN_KEY = 'admin.token';
+  var COLOR_KEYS = ['bg', 'panel', 'fg', 'muted', 'accent'];
+  var COLOR_DEFAULTS = {
+    bg: '#0a0a0a',
+    panel: '#111111',
+    fg: '#f5f1e8',
+    muted: '#8a8275',
+    accent: '#f6c54a'
+  };
+
   var state = {
     token: null,
-    entries: [],   // manifest entries
-    editing: null, // current entry being edited (full content + manifest meta)
+    entries: [],        // manifest entries
+    entryFilter: '',    // current search string
+    editing: null,
     settings: null
   };
 
@@ -15,6 +25,7 @@
   //   'entries'         → /api/admin/entries     (list, create)
   //   'entries/<slug>'  → /api/admin/entry?id=…  (load, update, delete)
   //   'settings'        → /api/admin/settings    (load, save)
+  //   'order'           → /api/admin/order       (reorder entries)
   function routeFor(path) {
     var parts = String(path).split('/');
     if (parts[0] === 'entries' && parts[1]) {
@@ -35,10 +46,8 @@
       if (!r.ok) {
         return r.text().then(function (t) {
           var msg = t || ('HTTP ' + r.status);
-          // If the server returned HTML (e.g. from a non-API host), keep
-          // it short and tag-free so the dashboard stays readable.
           if (/^\s*<!doctype/i.test(msg) || /^\s*<html/i.test(msg)) {
-            msg = 'API not reachable (' + r.status + '). Make sure the dashboard is running on Vercel.';
+            msg = 'API not reachable (' + r.status + ').';
           } else {
             try { msg = (JSON.parse(msg).error) || msg; } catch (e) {}
           }
@@ -108,16 +117,8 @@
     $('#logout-btn').addEventListener('click', signOut);
   }
 
-  function showLogin() {
-    $('#login').hidden = false;
-    $('#app').hidden = true;
-  }
-
-  function showApp() {
-    $('#login').hidden = true;
-    $('#app').hidden = false;
-  }
-
+  function showLogin() { $('#login').hidden = false; $('#app').hidden = true; }
+  function showApp() { $('#login').hidden = true; $('#app').hidden = false; }
   function signOut() {
     localStorage.removeItem(TOKEN_KEY);
     state.token = null;
@@ -140,7 +141,7 @@
       } else if (/\b403\b/.test(m)) {
         loginErr.textContent = "Token rejected with 403 — the PAT exists but isn't scoped to this repo or lacks Contents write.";
       } else if (/\b404\b/.test(m)) {
-        loginErr.textContent = "Couldn't reach the repo. The deployment may still be building, or the dashboard's repo config is wrong.";
+        loginErr.textContent = "Couldn't reach the repo. The deployment may still be building.";
       } else {
         loginErr.textContent = m.slice(0, 240);
       }
@@ -156,15 +157,32 @@
     $('#editor-back').addEventListener('click', function () { showView('entries'); });
     $('#editor-save').addEventListener('click', saveEditor);
     $('#editor-delete').addEventListener('click', deleteCurrentEntry);
-    $('#add-branch').addEventListener('click', function () { addBranchRow({ label: '', detail: '', focused: false }); });
+    $('#add-branch').addEventListener('click', function () {
+      addBranchRow({ label: '', detail: '', focused: false });
+    });
     $('#settings-save').addEventListener('click', saveSettings);
+    $('#add-social').addEventListener('click', function () {
+      addSocialRow({ label: '', url: '' });
+    });
 
-    // Sync color picker <-> hex input
-    var color = $('#settings-form [name="accent"]');
-    var hex = $('#settings-form [name="accentHex"]');
-    color.addEventListener('input', function () { hex.value = color.value; });
-    hex.addEventListener('input', function () {
-      if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) color.value = hex.value;
+    // Search box
+    var searchIn = $('#entries-search');
+    if (searchIn) {
+      searchIn.addEventListener('input', function () {
+        state.entryFilter = searchIn.value.trim().toLowerCase();
+        renderEntries();
+      });
+    }
+
+    // Wire color picker <-> hex input for each theme colour
+    COLOR_KEYS.forEach(function (k) {
+      var picker = $('#settings-form [data-color-key="' + k + '"]');
+      var hex = $('#settings-form [data-color-hex="' + k + '"]');
+      if (!picker || !hex) return;
+      picker.addEventListener('input', function () { hex.value = picker.value; });
+      hex.addEventListener('input', function () {
+        if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) picker.value = hex.value;
+      });
     });
 
     // Slug auto-fill from title when slug is empty
@@ -192,16 +210,37 @@
   }
 
   // ─── Entries list ─────────────────────────────────────────────────
+  function visibleEntries() {
+    var q = state.entryFilter;
+    var sorted = state.entries.slice().sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
+    if (!q) return sorted;
+    return sorted.filter(function (e) {
+      return (e.title || '').toLowerCase().indexOf(q) !== -1 ||
+             (e.id || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
   function renderEntries() {
     var box = $('#entries-table');
+    var rows = visibleEntries();
+    var countEl = $('#entries-count');
+    if (countEl) {
+      var total = state.entries.length;
+      countEl.textContent = rows.length === total ? total + ' total' : rows.length + ' of ' + total;
+    }
     if (!state.entries.length) {
       box.innerHTML = '<p class="muted" style="padding:24px">No entries yet. Click "+ New entry" to create one.</p>';
       return;
     }
-    var sorted = state.entries.slice().sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
-    box.innerHTML = sorted.map(function (e) {
+    if (!rows.length) {
+      box.innerHTML = '<p class="muted" style="padding:24px">No entries match that search.</p>';
+      return;
+    }
+    box.innerHTML = rows.map(function (e, i) {
       var pubClass = e.published === false ? 'draft' : 'published';
       var pubLabel = e.published === false ? 'Draft' : 'Published';
+      var first = i === 0;
+      var last = i === rows.length - 1;
       return (
         '<div class="entry-row" data-id="' + escapeHTML(e.id) + '">' +
           '<span class="num">No. ' + pad(e.n || 0) + '</span>' +
@@ -209,11 +248,78 @@
           '<span class="slug">' + escapeHTML(e.id) + '</span>' +
           '<span class="meta">' + (e.readMin || 0) + ' min · ' + escapeHTML(e.dateLabel || '') + '</span>' +
           '<span class="status-pill ' + pubClass + '">' + pubLabel + '</span>' +
+          '<span class="row-actions">' +
+            '<button type="button" class="icon-btn" data-action="up" title="Move up" ' + (first ? 'disabled' : '') + '>↑</button>' +
+            '<button type="button" class="icon-btn" data-action="down" title="Move down" ' + (last ? 'disabled' : '') + '>↓</button>' +
+            '<button type="button" class="icon-btn" data-action="duplicate" title="Duplicate">⎘</button>' +
+          '</span>' +
         '</div>'
       );
     }).join('');
     $$('.entry-row', box).forEach(function (row) {
-      row.addEventListener('click', function () { openEditor(row.dataset.id); });
+      var id = row.dataset.id;
+      $$('.icon-btn', row).forEach(function (btn) {
+        btn.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          if (btn.dataset.action === 'up') moveEntry(id, -1);
+          else if (btn.dataset.action === 'down') moveEntry(id, +1);
+          else if (btn.dataset.action === 'duplicate') duplicateEntry(id);
+        });
+      });
+      row.addEventListener('click', function () { openEditor(id); });
+    });
+  }
+
+  function moveEntry(id, delta) {
+    // Reorder within the FULL sorted list (not the filtered view), so a
+    // search doesn't skip over entries the user can't currently see.
+    var ordered = state.entries.slice().sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
+    var idx = ordered.findIndex(function (e) { return e.id === id; });
+    if (idx < 0) return;
+    var target = idx + delta;
+    if (target < 0 || target >= ordered.length) return;
+    var tmp = ordered[idx]; ordered[idx] = ordered[target]; ordered[target] = tmp;
+    var order = ordered.map(function (e) { return e.id; });
+
+    // Optimistic UI: renumber locally so the list refreshes instantly
+    var total = ordered.length;
+    ordered.forEach(function (e, i) { e.n = total - i; });
+    state.entries = ordered;
+    renderEntries();
+
+    api('order', { method: 'POST', body: { order: order } }).then(function (res) {
+      state.entries = res.entries || state.entries;
+      renderEntries();
+    }).catch(function (err) {
+      alert('Reorder failed: ' + err.message);
+    });
+  }
+
+  function duplicateEntry(id) {
+    setStatus($('#editor-status'), 'Loading…');
+    api('entries/' + encodeURIComponent(id)).then(function (entry) {
+      // Open the editor in "new" mode, pre-filled from this entry.
+      showView('editor');
+      var f = $('#editor-form');
+      f.reset();
+      $('#branches-list').innerHTML = '';
+      $('#editor-delete').hidden = true;
+      state.editing = { isNew: true };
+      f.querySelector('[name="title"]').value = (entry.title || '') + ' (copy)';
+      var newSlug = slugify(f.querySelector('[name="title"]').value);
+      f.querySelector('[name="id"]').value = newSlug;
+      f.querySelector('[name="id"]').dataset.touched = '1';
+      f.querySelector('[name="date"]').value = todayISO();
+      f.querySelector('[name="readMin"]').value = entry.readMin || 3;
+      f.querySelector('[name="teaser"]').value = entry.teaser || '';
+      f.querySelector('[name="intro"]').value = entry.intro || '';
+      f.querySelector('[name="footer"]').value = entry.footer || '';
+      f.querySelector('[name="published"]').checked = false;  // duplicates start as drafts
+      (entry.branches || []).forEach(addBranchRow);
+      if (!(entry.branches || []).length) addBranchRow({ label: '', detail: '', focused: false });
+      setStatus($('#editor-status'), 'Copy ready — edit, then save.');
+    }).catch(function (err) {
+      alert('Duplicate failed: ' + err.message);
     });
   }
 
@@ -228,10 +334,7 @@
     $('#editor-delete').hidden = !id;
 
     if (!id) {
-      // New entry: fresh defaults
       state.editing = { isNew: true };
-      var nextN = state.entries.reduce(function (m, e) { return Math.max(m, e.n || 0); }, 0) + 1;
-      f.querySelector('[name="n"]').value = nextN;
       f.querySelector('[name="date"]').value = todayISO();
       f.querySelector('[name="readMin"]').value = 3;
       f.querySelector('[name="published"]').checked = true;
@@ -247,12 +350,10 @@
       f.querySelector('[name="title"]').value = entry.title || '';
       f.querySelector('[name="id"]').value = entry.id || '';
       f.querySelector('[name="id"]').dataset.touched = '1';
-      f.querySelector('[name="n"]').value = entry.n || 1;
       f.querySelector('[name="date"]').value = entry.date || '';
       f.querySelector('[name="readMin"]').value = entry.readMin || 3;
       f.querySelector('[name="teaser"]').value = entry.teaser || '';
       f.querySelector('[name="intro"]').value = entry.intro || '';
-      f.querySelector('[name="centerText"]').value = (entry.center && entry.center.text) || '';
       f.querySelector('[name="footer"]').value = entry.footer || '';
       f.querySelector('[name="published"]').checked = entry.published !== false;
       $('#branches-list').innerHTML = '';
@@ -276,7 +377,6 @@
     row.querySelector('.branch-remove').addEventListener('click', function () { row.remove(); });
     row.querySelector('.focus-toggle input').addEventListener('change', function (e) {
       if (e.target.checked) {
-        // Only one focused branch at a time
         $$('.focus-toggle input', box).forEach(function (cb) {
           if (cb !== e.target) cb.checked = false;
         });
@@ -301,12 +401,10 @@
     var data = {
       title: f.querySelector('[name="title"]').value.trim(),
       id: f.querySelector('[name="id"]').value.trim(),
-      n: parseInt(f.querySelector('[name="n"]').value, 10) || 1,
       date: f.querySelector('[name="date"]').value,
       readMin: parseInt(f.querySelector('[name="readMin"]').value, 10) || 3,
       teaser: f.querySelector('[name="teaser"]').value.trim(),
       intro: f.querySelector('[name="intro"]').value.trim(),
-      centerText: f.querySelector('[name="centerText"]').value.trim(),
       footer: f.querySelector('[name="footer"]').value.trim(),
       published: f.querySelector('[name="published"]').checked,
       branches: collectBranches()
@@ -326,7 +424,6 @@
       state.editing = res.entry || data;
       setStatus($('#editor-status'), 'Saved · publishing…', 'ok');
       renderEntries();
-      // Move back to entries list after a beat
       setTimeout(function () { showView('entries'); }, 700);
     }).catch(function (err) {
       setStatus($('#editor-status'), 'Save failed: ' + err.message, 'err');
@@ -347,28 +444,80 @@
   }
 
   // ─── Settings ─────────────────────────────────────────────────────
+  function addSocialRow(s) {
+    var box = $('#socials-list');
+    var row = document.createElement('div');
+    row.className = 'social-edit';
+    row.innerHTML =
+      '<input type="text" placeholder="Label (e.g. X / Twitter)" value="' + escapeHTML(s.label || '') + '" />' +
+      '<input type="text" placeholder="URL or mailto:…" value="' + escapeHTML(s.url || '') + '" />' +
+      '<button type="button" class="branch-remove" title="Remove">✕</button>';
+    row.querySelector('.branch-remove').addEventListener('click', function () { row.remove(); });
+    box.appendChild(row);
+  }
+
+  function collectSocials() {
+    return $$('.social-edit', $('#socials-list')).map(function (row) {
+      var inputs = row.querySelectorAll('input');
+      return { label: inputs[0].value.trim(), url: inputs[1].value.trim() };
+    }).filter(function (s) { return s.label && s.url; });
+  }
+
   function loadSettings() {
     setStatus($('#settings-status'), 'Loading…');
-    api('settings').then(function (s) {
+    api('settings').then(function (raw) {
+      var s = migrateSettings(raw || {});
       state.settings = s;
       var f = $('#settings-form');
-      Object.keys(s || {}).forEach(function (k) {
+      // Plain text/number fields by name
+      ['brand','heroTagline','heroEmFromLine','footerTagline','subscribeTagline','bottomTag','year','contactEmail'].forEach(function (k) {
         var input = f.querySelector('[name="' + k + '"]');
-        if (input) input.value = s[k];
+        if (input && s[k] != null) input.value = s[k];
       });
-      // sync color hex display
-      var color = f.querySelector('[name="accent"]');
-      var hex = f.querySelector('[name="accentHex"]');
-      if (color) color.value = s.accent || '#f6c54a';
-      if (hex) hex.value = s.accent || '#f6c54a';
+      // Colour pickers
+      COLOR_KEYS.forEach(function (k) {
+        var picker = f.querySelector('[data-color-key="' + k + '"]');
+        var hex = f.querySelector('[data-color-hex="' + k + '"]');
+        var v = (s.colors && s.colors[k]) || COLOR_DEFAULTS[k];
+        if (picker) picker.value = v;
+        if (hex) hex.value = v;
+      });
+      // Socials
+      $('#socials-list').innerHTML = '';
+      (s.socials || []).forEach(addSocialRow);
+      if (!(s.socials || []).length) addSocialRow({ label: '', url: '' });
       setStatus($('#settings-status'), '');
     }).catch(function (err) {
       setStatus($('#settings-status'), 'Load failed: ' + err.message, 'err');
     });
   }
 
+  function migrateSettings(s) {
+    var out = Object.assign({}, s);
+    if (!out.colors) out.colors = {};
+    if (s.accent && !out.colors.accent) out.colors.accent = s.accent;
+    COLOR_KEYS.forEach(function (k) {
+      if (!out.colors[k]) out.colors[k] = COLOR_DEFAULTS[k];
+    });
+    if (!Array.isArray(out.socials) || !out.socials.length) {
+      var legacy = [];
+      if (s.twitter) legacy.push({ label: 'X / Twitter', url: s.twitter });
+      if (s.rssPath) legacy.push({ label: 'RSS', url: s.rssPath });
+      if (s.email) legacy.push({ label: 'Email', url: 'mailto:' + s.email });
+      out.socials = legacy;
+    }
+    if (!out.contactEmail && s.email) out.contactEmail = s.email;
+    return out;
+  }
+
   function saveSettings() {
     var f = $('#settings-form');
+    var colors = {};
+    COLOR_KEYS.forEach(function (k) {
+      var hex = f.querySelector('[data-color-hex="' + k + '"]');
+      var picker = f.querySelector('[data-color-key="' + k + '"]');
+      colors[k] = (hex && hex.value.trim()) || (picker && picker.value) || COLOR_DEFAULTS[k];
+    });
     var data = {
       brand: f.querySelector('[name="brand"]').value.trim(),
       heroTagline: f.querySelector('[name="heroTagline"]').value,
@@ -376,11 +525,10 @@
       footerTagline: f.querySelector('[name="footerTagline"]').value.trim(),
       subscribeTagline: f.querySelector('[name="subscribeTagline"]').value.trim(),
       bottomTag: f.querySelector('[name="bottomTag"]').value.trim(),
-      accent: f.querySelector('[name="accentHex"]').value.trim() || f.querySelector('[name="accent"]').value,
       year: parseInt(f.querySelector('[name="year"]').value, 10),
-      email: f.querySelector('[name="email"]').value.trim(),
-      twitter: f.querySelector('[name="twitter"]').value.trim(),
-      rssPath: f.querySelector('[name="rssPath"]').value.trim() || '/feed.xml'
+      contactEmail: f.querySelector('[name="contactEmail"]').value.trim(),
+      colors: colors,
+      socials: collectSocials()
     };
     setStatus($('#settings-status'), 'Saving…');
     api('settings', { method: 'PUT', body: data }).then(function (res) {

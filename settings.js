@@ -1,6 +1,7 @@
 /* Loads /data/settings.json and applies it across the public site.
-   Pages mark dynamic elements with data-bind="key" or the well-known
-   classes used in this codebase (brand-script, footer-tagline, …). */
+   Backwards-compatible with the early flat schema (accent / email /
+   twitter / rssPath as siblings) and the newer one with a `colors`
+   object and a `socials` array. */
 (function () {
   var DEFAULTS = {
     brand: 'uthman',
@@ -9,11 +10,16 @@
     footerTagline: 'Notes I keep, drawn the way I think — a topic in the middle, arrows out.',
     subscribeTagline: 'A note when a new entry drops.',
     bottomTag: 'A topic in the middle, arrows out.',
-    accent: '#f6c54a',
+    contactEmail: 'hi@uthman.xyz',
     year: new Date().getFullYear(),
-    email: 'hi@uthman.xyz',
-    twitter: 'https://x.com/',
-    rssPath: '/feed.xml'
+    colors: {
+      accent: '#f6c54a'
+    },
+    socials: [
+      { label: 'X / Twitter', url: 'https://x.com/' },
+      { label: 'RSS', url: '/feed.xml' },
+      { label: 'Email', url: 'mailto:hi@uthman.xyz' }
+    ]
   };
 
   function escapeHTML(s) {
@@ -34,9 +40,42 @@
     return html;
   }
 
+  function migrate(s) {
+    var out = Object.assign({}, DEFAULTS, s || {});
+    // Colors: lift legacy top-level `accent` into colors.accent
+    out.colors = Object.assign({}, DEFAULTS.colors, s && s.colors || {});
+    if (s && s.accent && !out.colors.accent) out.colors.accent = s.accent;
+    // Socials: build from legacy flat fields if no array given
+    if (!Array.isArray(out.socials) || !out.socials.length) {
+      var legacy = [];
+      if (s && s.twitter) legacy.push({ label: 'X / Twitter', url: s.twitter });
+      if (s && s.rssPath) legacy.push({ label: 'RSS', url: s.rssPath });
+      if (s && s.email) legacy.push({ label: 'Email', url: 'mailto:' + s.email });
+      out.socials = legacy.length ? legacy : DEFAULTS.socials;
+    }
+    // Contact email: legacy `email` becomes contactEmail
+    if (!out.contactEmail && s && s.email) out.contactEmail = s.email;
+    return out;
+  }
+
+  function isEmailLike(url) {
+    return /^mailto:/i.test(url || '');
+  }
+
   function apply(s) {
     var root = document.documentElement;
-    if (s.accent) root.style.setProperty('--accent', s.accent);
+    if (s.colors) {
+      var map = {
+        bg: '--bg',
+        panel: '--panel',
+        fg: '--fg',
+        muted: '--muted',
+        accent: '--accent'
+      };
+      Object.keys(map).forEach(function (k) {
+        if (s.colors[k]) root.style.setProperty(map[k], s.colors[k]);
+      });
+    }
 
     var brands = document.querySelectorAll('.brand-script');
     for (var i = 0; i < brands.length; i++) brands[i].textContent = s.brand;
@@ -64,16 +103,31 @@
       copyright.textContent = '© ' + (s.year || new Date().getFullYear()) + ' ' + s.brand + '. All rights reserved.';
     }
 
-    var emailLinks = document.querySelectorAll('a[data-social="email"]');
-    for (var k = 0; k < emailLinks.length; k++) {
-      emailLinks[k].href = 'mailto:' + s.email;
+    // Render the dynamic socials list (footer "Follow" column).
+    var socialsList = document.querySelector('[data-socials]');
+    if (socialsList && Array.isArray(s.socials)) {
+      socialsList.innerHTML = s.socials.map(function (link) {
+        var url = link.url || '#';
+        var ext = !isEmailLike(url) && /^https?:/i.test(url);
+        return '<li><a href="' + escapeHTML(url) + '"' +
+          (ext ? ' target="_blank" rel="noopener"' : '') +
+          '>' + escapeHTML(link.label || url) + '</a></li>';
+      }).join('');
     }
 
-    var twitter = document.querySelector('a[data-social="twitter"]');
-    if (twitter) twitter.href = s.twitter;
-
-    var rss = document.querySelector('a[data-social="rss"]');
-    if (rss) rss.href = s.rssPath;
+    // "Contact" link in the Navigate column points at the configured email
+    // (or the first email-like entry in socials as a fallback).
+    var contact = s.contactEmail;
+    if (!contact) {
+      var firstEmail = (s.socials || []).find(function (l) { return isEmailLike(l.url); });
+      if (firstEmail) contact = firstEmail.url.replace(/^mailto:/i, '');
+    }
+    if (contact) {
+      var contactLinks = document.querySelectorAll('a[data-contact-email]');
+      for (var k = 0; k < contactLinks.length; k++) {
+        contactLinks[k].href = 'mailto:' + contact;
+      }
+    }
   }
 
   window.SiteSettings = {
@@ -84,8 +138,8 @@
       this._promise = fetch('/data/settings.json', { cache: 'no-cache' })
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; })
-        .then(function (s) {
-          self.data = Object.assign({}, DEFAULTS, s || {});
+        .then(function (raw) {
+          self.data = migrate(raw);
           apply(self.data);
           return self.data;
         });
@@ -93,6 +147,5 @@
     }
   };
 
-  // Auto-load on every page that includes this script.
   window.SiteSettings.load();
 })();

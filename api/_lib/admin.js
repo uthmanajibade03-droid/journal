@@ -257,6 +257,19 @@ async function upsertEntry(ctx, body, isNew, existingId) {
   }
 
   const isRename = !isNew && existingId && existingId !== body.id;
+  const oldRow = manifest.entries.find(function (e) { return e.id === (isRename ? existingId : body.id); });
+
+  // Resolve the entry number. New entries get max(existing) + 1 unless
+  // the caller specified one; edits keep the manifest's existing n
+  // unless the form explicitly overrode it.
+  let n = (typeof body.n === 'number' && body.n > 0) ? body.n : null;
+  if (!n) {
+    if (oldRow && oldRow.n) {
+      n = oldRow.n;
+    } else {
+      n = manifest.entries.reduce(function (m, e) { return Math.max(m, e.n || 0); }, 0) + 1;
+    }
+  }
 
   let branches = body.branches;
   let arrows = null;
@@ -298,6 +311,7 @@ async function upsertEntry(ctx, body, isNew, existingId) {
     id: body.id,
     title: body.title,
     titleLong: body.title,
+    n: n,
     date: body.date,
     dateLabel: body.dateLabel,
     readMin: body.readMin,
@@ -313,7 +327,6 @@ async function upsertEntry(ctx, body, isNew, existingId) {
     footer: body.footer || ''
   };
 
-  const oldRow = manifest.entries.find(function (e) { return e.id === (isRename ? existingId : body.id); });
   const newRow = entryToManifestRow(entry, oldRow);
   if (oldRow) {
     manifest.entries = manifest.entries.map(function (e) { return e.id === oldRow.id ? newRow : e; });
@@ -340,6 +353,32 @@ async function upsertEntry(ctx, body, isNew, existingId) {
   return { entry: entry, entries: manifest.entries };
 }
 
+// ─── Reorder entries: takes an ordered list of ids, top-to-bottom,
+//     and reassigns n so the first id has the highest number. ──────
+async function reorderEntries(ctx, ids) {
+  if (!Array.isArray(ids) || !ids.length) {
+    const e = new Error('order must be a non-empty array of ids'); e.status = 400; throw e;
+  }
+  const manifest = await readManifest(ctx);
+  const byId = {};
+  manifest.entries.forEach(function (e) { byId[e.id] = e; });
+  for (const id of ids) {
+    if (!byId[id]) { const e = new Error('unknown id: ' + id); e.status = 400; throw e; }
+  }
+  // Preserve any ids the caller didn't include (put them after, in original order)
+  const seen = new Set(ids);
+  const tail = manifest.entries.filter(function (e) { return !seen.has(e.id); }).map(function (e) { return e.id; });
+  const fullOrder = ids.concat(tail);
+  const total = fullOrder.length;
+  manifest.entries = fullOrder.map(function (id, i) {
+    return Object.assign({}, byId[id], { n: total - i });
+  });
+  await commitFiles(ctx, 'admin: reorder entries', [
+    { path: 'data/index.json', content: JSON.stringify(manifest, null, 2) + '\n' }
+  ]);
+  return { entries: manifest.entries };
+}
+
 module.exports = {
   send,
   readJSON,
@@ -350,5 +389,6 @@ module.exports = {
   reportError,
   validateEntry,
   upsertEntry,
+  reorderEntries,
   entryToManifestRow
 };

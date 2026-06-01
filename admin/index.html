@@ -47,6 +47,10 @@
           <h2>Entries</h2>
           <button class="primary" id="new-entry-btn">+ New entry</button>
         </div>
+        <div class="entries-toolbar">
+          <input type="search" id="entries-search" placeholder="Search by title or slug…" autocomplete="off" />
+          <span id="entries-count" class="status muted"></span>
+        </div>
         <div class="entries-table" id="entries-table">
           <p class="muted">Loading…</p>
         </div>
@@ -75,11 +79,7 @@
             </label>
           </div>
 
-          <div class="row three">
-            <label>
-              <span>Number</span>
-              <input type="number" name="n" min="1" required />
-            </label>
+          <div class="row two">
             <label>
               <span>Date</span>
               <input type="date" name="date" required />
@@ -98,11 +98,6 @@
           <label class="row">
             <span>Intro (the small handwritten line above the map)</span>
             <textarea name="intro" rows="2" required></textarea>
-          </label>
-
-          <label class="row">
-            <span>Center label (defaults to title if blank)</span>
-            <input type="text" name="centerText" />
           </label>
 
           <div class="row">
@@ -140,19 +135,10 @@
         </div>
 
         <form id="settings-form" class="editor-form" onsubmit="return false">
-          <div class="row two">
-            <label>
-              <span>Brand name</span>
-              <input type="text" name="brand" required />
-            </label>
-            <label>
-              <span>Accent color</span>
-              <span class="color-row">
-                <input type="color" name="accent" />
-                <input type="text" name="accentHex" pattern="#[0-9a-fA-F]{6}" />
-              </span>
-            </label>
-          </div>
+          <label class="row">
+            <span>Brand name</span>
+            <input type="text" name="brand" required />
+          </label>
 
           <label class="row">
             <span>Hero tagline (one line per row; the last line is italicised)</span>
@@ -183,25 +169,39 @@
             </label>
           </div>
 
-          <div class="row three">
+          <div class="row two">
             <label>
               <span>Year</span>
               <input type="number" name="year" min="2020" max="2100" required />
             </label>
             <label>
-              <span>Contact email</span>
-              <input type="email" name="email" required />
-            </label>
-            <label>
-              <span>Twitter / X URL</span>
-              <input type="url" name="twitter" />
+              <span>Contact email (used for the Contact link)</span>
+              <input type="email" name="contactEmail" required />
             </label>
           </div>
 
-          <label class="row">
-            <span>RSS path</span>
-            <input type="text" name="rssPath" placeholder="/feed.xml" />
-          </label>
+          <div class="row">
+            <div class="branches-head">
+              <span>Theme colors</span>
+              <span class="hint" style="margin:0">Tweak the public site palette.</span>
+            </div>
+            <div class="colors-grid" id="colors-grid">
+              <label class="color-field"><span>Background</span><span class="color-row"><input type="color" data-color-key="bg" /><input type="text" data-color-hex="bg" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Panel</span><span class="color-row"><input type="color" data-color-key="panel" /><input type="text" data-color-hex="panel" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Text</span><span class="color-row"><input type="color" data-color-key="fg" /><input type="text" data-color-hex="fg" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Muted</span><span class="color-row"><input type="color" data-color-key="muted" /><input type="text" data-color-hex="muted" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Accent</span><span class="color-row"><input type="color" data-color-key="accent" /><input type="text" data-color-hex="accent" pattern="#[0-9a-fA-F]{6}" /></span></label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="branches-head">
+              <span>Social links</span>
+              <button type="button" class="ghost small" id="add-social">+ Add link</button>
+            </div>
+            <p class="hint">These are the items in the footer's "Follow" column. Email entries should start with <code>mailto:</code>.</p>
+            <div id="socials-list" class="socials-editor"></div>
+          </div>
         </form>
       </section>
     </main>
