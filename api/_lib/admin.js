@@ -89,7 +89,16 @@ async function readJSON(ctx, path) {
 async function commitFiles(ctx, message, files) {
   // Writes go to KV — no git commit, no Vercel rebuild, instant.
   if (!kv.configured()) {
-    const e = new Error('Vercel KV not configured. Enable a KV database in the Vercel project Storage tab so the dashboard can save without redeploying.');
+    const hasUrl = !!(process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL);
+    const hasTok = !!(process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN);
+    const detail = hasUrl && !hasTok ? '(URL is set but TOKEN is missing)' :
+                   !hasUrl && hasTok ? '(TOKEN is set but URL is missing)' :
+                   '(neither URL nor TOKEN is set on the function)';
+    const e = new Error(
+      'Upstash Redis env vars are missing on the deployment ' + detail +
+      '. Connect the Upstash database to this Vercel project, then redeploy ' +
+      '(Vercel does not inject env vars into already-running functions).'
+    );
     e.status = 500;
     throw e;
   }
