@@ -275,6 +275,18 @@
     // "Save current palette as a named preset"
     $('#save-preset').addEventListener('click', saveCurrentAsPreset);
 
+    // Nav-bar style chips
+    $$('.nav-style-chip[data-nav-style]').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        $$('.nav-style-chip').forEach(function (c) { c.classList.remove('is-active'); });
+        chip.classList.add('is-active');
+        updatePreview();
+      });
+    });
+    // Nav-bar visibility slider
+    var visIn = $('#nav-visibility');
+    if (visIn) visIn.addEventListener('input', updatePreview);
+
     // Slug auto-fill from title when slug is empty
     var titleIn = $('#editor-form [name="title"]');
     var slugIn = $('#editor-form [name="id"]');
@@ -547,6 +559,31 @@
     var brandIn = f.querySelector('[name="brand"]');
     var brandEl = preview.querySelector('.tp-brand-text');
     if (brandIn && brandEl) brandEl.textContent = brandIn.value || 'uthman';
+
+    // Navbar style + visibility — mirrors the public-site CSS.
+    var style = currentNavbarStyle();
+    preview.setAttribute('data-navbar-style', style);
+    var navEl = preview.querySelector('.tp-navbar');
+    if (navEl) {
+      var vis = currentNavbarVisibility();
+      navEl.style.setProperty('--nav-vis', (vis / 100).toFixed(3));
+    }
+    var readout = $('#nav-vis-readout');
+    if (readout) readout.textContent = currentNavbarVisibility() + '%';
+  }
+
+  function currentNavbarStyle() {
+    var active = $('.nav-style-chip.is-active');
+    return (active && active.dataset.navStyle) || 'fade';
+  }
+  function currentNavbarVisibility() {
+    var v = parseInt(($('#nav-visibility') || {}).value, 10);
+    return isFinite(v) ? Math.max(0, Math.min(100, v)) : 100;
+  }
+  function setNavbarStyle(style) {
+    $$('.nav-style-chip').forEach(function (c) {
+      c.classList.toggle('is-active', c.dataset.navStyle === style);
+    });
   }
 
   function applyPalette(p) {
@@ -649,6 +686,8 @@
       bottomTag: f.querySelector('[name="bottomTag"]').value.trim(),
       year: parseInt(f.querySelector('[name="year"]').value, 10),
       contactEmail: f.querySelector('[name="contactEmail"]').value.trim(),
+      navbarStyle: currentNavbarStyle(),
+      navbarVisibility: currentNavbarVisibility(),
       colors: currentColors(),
       socials: collectSocials()
     };
@@ -688,6 +727,10 @@
         var input = f.querySelector('[name="' + k + '"]');
         if (input && s[k] != null) input.value = s[k];
       });
+      // Navbar style + visibility
+      setNavbarStyle(s.navbarStyle || 'fade');
+      var visIn = $('#nav-visibility');
+      if (visIn) visIn.value = (s.navbarVisibility == null ? 100 : s.navbarVisibility);
       // Colour pickers
       COLOR_KEYS.forEach(function (k) {
         var picker = f.querySelector('[data-color-key="' + k + '"]');

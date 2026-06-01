@@ -216,11 +216,29 @@
             <div class="colors-grid" id="colors-grid">
               <label class="color-field"><span>Background</span><span class="color-desc">page colour behind everything</span><span class="color-row"><input type="color" data-color-key="bg" /><input type="text" data-color-hex="bg" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Panel</span><span class="color-desc">cards, form surfaces, footer</span><span class="color-row"><input type="color" data-color-key="panel" /><input type="text" data-color-hex="panel" pattern="#[0-9a-fA-F]{6}" /></span></label>
-              <label class="color-field"><span>Nav bar</span><span class="color-desc">fixed bar at the top of the page (fades into transparency)</span><span class="color-row"><input type="color" data-color-key="navbar" /><input type="text" data-color-hex="navbar" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Nav bar</span><span class="color-desc">fixed bar at the top of the page</span><span class="color-row"><input type="color" data-color-key="navbar" /><input type="text" data-color-hex="navbar" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Text</span><span class="color-desc">main reading copy</span><span class="color-row"><input type="color" data-color-key="fg" /><input type="text" data-color-hex="fg" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Muted</span><span class="color-desc">dates, hints, secondary text</span><span class="color-row"><input type="color" data-color-key="muted" /><input type="text" data-color-hex="muted" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Accent</span><span class="color-desc">highlights, focused branch, links</span><span class="color-row"><input type="color" data-color-key="accent" /><input type="text" data-color-hex="accent" pattern="#[0-9a-fA-F]{6}" /></span></label>
             </div>
+          </div>
+
+          <div class="row">
+            <div class="branches-head">
+              <span>Nav bar style</span>
+              <span class="nav-vis-readout" id="nav-vis-readout">100%</span>
+            </div>
+            <p class="hint">Choose how the top bar looks. Glass is the iPhone-style frosted blur — it picks up whatever is scrolling beneath it.</p>
+            <div class="nav-style-row" id="nav-style-row">
+              <button type="button" class="nav-style-chip is-active" data-nav-style="fade"><span class="nav-style-swatch nav-swatch-fade"></span>Fade</button>
+              <button type="button" class="nav-style-chip" data-nav-style="glass"><span class="nav-style-swatch nav-swatch-glass"></span>Glass</button>
+              <button type="button" class="nav-style-chip" data-nav-style="solid"><span class="nav-style-swatch nav-swatch-solid"></span>Solid</button>
+              <button type="button" class="nav-style-chip" data-nav-style="none"><span class="nav-style-swatch nav-swatch-none"></span>None</button>
+            </div>
+            <label class="nav-vis-row">
+              <span>Visibility</span>
+              <input type="range" min="0" max="100" step="1" id="nav-visibility" value="100" />
+            </label>
           </div>
 
           <div class="row">

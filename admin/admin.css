@@ -328,22 +328,44 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   position: relative;
 }
 .tp-navbar {
-  height: 26px;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--tp-navbar) 78%, transparent) 0%,
-    color-mix(in srgb, var(--tp-navbar) 55%, transparent) 60%,
-    transparent 100%);
-  /* Sit over the frame so the gradient blends into the preview bg below,
-     just like the real navbar does on the public site. */
+  height: 40px;
   position: absolute;
   inset: 0 0 auto 0;
   z-index: 1;
   pointer-events: none;
-  transition: background 200ms ease;
+  --nav-vis: 1;
+  transition: background 220ms ease, backdrop-filter 220ms ease, border-color 220ms ease;
+}
+.theme-preview[data-navbar-style="fade"] .tp-navbar,
+.theme-preview:not([data-navbar-style]) .tp-navbar {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tp-navbar) calc(78% * var(--nav-vis)), transparent) 0%,
+    color-mix(in srgb, var(--tp-navbar) calc(55% * var(--nav-vis)), transparent) 60%,
+    transparent 100%);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.theme-preview[data-navbar-style="glass"] .tp-navbar {
+  background: color-mix(in srgb, var(--tp-navbar) calc(55% * var(--nav-vis)), transparent);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  border-bottom: 1px solid color-mix(in srgb, var(--tp-fg) calc(12% * var(--nav-vis)), transparent);
+}
+.theme-preview[data-navbar-style="solid"] .tp-navbar {
+  background: color-mix(in srgb, var(--tp-navbar) calc(100% * var(--nav-vis)), transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--tp-fg) 14%, transparent);
+}
+.theme-preview[data-navbar-style="none"] .tp-navbar {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
 }
 .theme-preview-frame {
   background: var(--tp-bg);
-  padding: 18px 22px 20px;
+  /* Generous top padding so the brand line sits partly UNDER the navbar
+     strip; that way Glass mode visibly blurs the text behind it. */
+  padding: 22px 22px 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -489,6 +511,79 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   background: rgba(227, 97, 97, 0.12);
 }
 .preset-save-btn { margin-left: auto; }
+
+/* ─── Nav-bar style picker ────────────────────────────────────────── */
+.nav-style-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.nav-style-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+.nav-style-chip:hover { background: var(--panel-2); border-color: var(--line-strong); }
+.nav-style-chip.is-active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--fg);
+}
+.nav-style-swatch {
+  display: inline-block;
+  width: 28px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.nav-swatch-fade {
+  background: linear-gradient(180deg, #2a2a2c 0%, rgba(42,42,44,0.5) 60%, transparent 100%);
+}
+.nav-swatch-glass {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 60%),
+    rgba(40,40,46,0.55);
+  backdrop-filter: blur(2px);
+}
+.nav-swatch-solid { background: #1a1a1c; }
+.nav-swatch-none { background: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,0.08) 3px 6px); }
+
+.nav-vis-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+.nav-vis-row > span {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 72px;
+}
+.nav-vis-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+.nav-vis-readout {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
 
 /* ─── Theme color grid ────────────────────────────────────────────── */
 .colors-grid {

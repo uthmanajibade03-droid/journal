@@ -12,6 +12,8 @@
     bottomTag: 'A topic in the middle, arrows out.',
     contactEmail: 'hi@uthman.xyz',
     year: new Date().getFullYear(),
+    navbarStyle: 'fade',
+    navbarVisibility: 100,
     colors: {
       navbar: '#0b0b0c',
       accent: '#f6c54a'
@@ -65,6 +67,17 @@
 
   function apply(s) {
     var root = document.documentElement;
+
+    // Navbar style + visibility — drives the body[data-navbar-style] CSS.
+    var navStyle = s.navbarStyle || 'fade';
+    if (['fade','glass','solid','none'].indexOf(navStyle) === -1) navStyle = 'fade';
+    document.body.setAttribute('data-navbar-style', navStyle);
+    var vis = (s.navbarVisibility == null) ? 100 : Number(s.navbarVisibility);
+    if (!isFinite(vis)) vis = 100;
+    vis = Math.max(0, Math.min(100, vis));
+    var header = document.querySelector('.top-header');
+    if (header) header.style.setProperty('--nav-vis', (vis / 100).toFixed(3));
+
     if (s.colors) {
       var map = {
         bg: '--bg',
