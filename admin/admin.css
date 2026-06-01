@@ -18,6 +18,9 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+/* Make the [hidden] attribute beat class-level display rules below
+   (.login-wrap is display:flex, which otherwise overrides display:none). */
+[hidden] { display: none !important; }
 body {
   font-family: var(--sans);
   font-weight: 400;

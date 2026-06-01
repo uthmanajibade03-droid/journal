@@ -1,5 +1,4 @@
 (function () {
-  console.log('[admin] script loaded');
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
@@ -90,9 +89,7 @@
 
   // ─── Login ────────────────────────────────────────────────────────
   function init() {
-    console.log('[admin] init: starting');
     var stored = localStorage.getItem(TOKEN_KEY);
-    console.log('[admin] init: stored token?', !!stored);
     if (stored) {
       state.token = stored;
       verifyAndStart();
@@ -100,11 +97,8 @@
       showLogin();
     }
 
-    var loginForm = $('#login-form');
-    console.log('[admin] init: login form element?', !!loginForm);
-    loginForm.addEventListener('submit', function (e) {
+    $('#login-form').addEventListener('submit', function (e) {
       e.preventDefault();
-      console.log('[admin] login submit fired');
       var t = $('#token-input').value.trim();
       if (!t) return;
       state.token = t;
@@ -112,7 +106,6 @@
     });
 
     $('#logout-btn').addEventListener('click', signOut);
-    console.log('[admin] init: done');
   }
 
   function showLogin() {
@@ -132,20 +125,13 @@
   }
 
   function verifyAndStart() {
-    console.log('[admin] verifyAndStart: fetching entries…');
     api('entries').then(function (data) {
-      console.log('[admin] verifyAndStart: got data', data);
       localStorage.setItem(TOKEN_KEY, state.token);
       state.entries = data.entries || [];
-      console.log('[admin] verifyAndStart: about to showApp(); entries=', state.entries.length);
       showApp();
-      console.log('[admin] verifyAndStart: showApp() ran; login.hidden=', $('#login').hidden, 'app.hidden=', $('#app').hidden);
       renderEntries();
-      console.log('[admin] verifyAndStart: renderEntries() ran');
       wireNav();
-      console.log('[admin] verifyAndStart: done');
     }).catch(function (err) {
-      console.error('[admin] verifyAndStart: caught error', err);
       var loginErr = $('#login-error');
       loginErr.hidden = false;
       var m = err.message || '';
