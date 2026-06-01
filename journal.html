@@ -8,6 +8,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('site.settings.cache') || '{}');
+        var r = document.documentElement;
+        if (s.colors) {
+          var map = { bg:'--bg', panel:'--panel', navbar:'--navbar', fg:'--fg', muted:'--muted', accent:'--accent' };
+          for (var k in map) if (s.colors[k]) r.style.setProperty(map[k], s.colors[k]);
+        }
+        if (s.navbarStyle) r.setAttribute('data-navbar-style', s.navbarStyle);
+        if (s.navbarVisibility != null) r.style.setProperty('--nav-vis', (Number(s.navbarVisibility) / 100).toFixed(3));
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="entry">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">

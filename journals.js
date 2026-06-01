@@ -127,30 +127,57 @@
   var id = param('id');
   if (!id) { renderError('Missing entry id', '404'); return; }
 
-  // Runtime endpoints with static-file fallback. Treat empty/null as a
-  // miss too, so the public site never goes blank because of an API hiccup.
+  // Runtime endpoints with static-file fallback AND localStorage cache.
+  // The cache lets repeat visits render instantly — the live fetch runs
+  // in the background and refreshes the cache for the next visit.
   function fetchEntry(slug) {
-    return fetch('/api/data/entry?id=' + encodeURIComponent(slug), { cache: 'no-store' })
+    var cacheKey = 'journal.cache.entry:' + slug;
+    var live = fetch('/api/data/entry?id=' + encodeURIComponent(slug), { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; })
       .then(function (data) {
-        if (data && data.id) return data;
+        if (data && data.id) {
+          try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
+          return data;
+        }
         return fetch('data/' + encodeURIComponent(slug) + '.json').then(function (r) {
           if (!r.ok) throw new Error('entry ' + r.status);
           return r.json();
         });
       });
+    try {
+      var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+      if (cached && cached.id) {
+        // Render with cached data immediately. Live fetch still runs and
+        // updates the cache for next time.
+        live.catch(function () {});
+        return Promise.resolve(cached);
+      }
+    } catch (e) {}
+    return live;
   }
   function fetchManifest() {
-    return fetch('/api/data/index', { cache: 'no-store' })
+    var cacheKey = 'journal.cache.manifest';
+    var live = fetch('/api/data/index', { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; })
       .then(function (data) {
-        if (data && Array.isArray(data.entries) && data.entries.length) return data;
+        if (data && Array.isArray(data.entries) && data.entries.length) {
+          try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
+          return data;
+        }
         return fetch('data/index.json')
           .then(function (r) { return r.ok ? r.json() : { entries: [] }; })
           .catch(function () { return { entries: [] }; });
       });
+    try {
+      var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+      if (cached && Array.isArray(cached.entries) && cached.entries.length) {
+        live.catch(function () {});
+        return Promise.resolve(cached);
+      }
+    } catch (e) {}
+    return live;
   }
 
   Promise.all([fetchEntry(id), fetchManifest()]).then(function (results) {

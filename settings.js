@@ -68,15 +68,18 @@
   function apply(s) {
     var root = document.documentElement;
 
-    // Navbar style + visibility — drives the body[data-navbar-style] CSS.
+    // Navbar style + visibility — set on documentElement so the head-
+    // script and this code reach the same place, and CSS inheritance
+    // does the rest. (Previously written to .top-header which doesn't
+    // exist when the head-script runs.)
     var navStyle = s.navbarStyle || 'fade';
     if (['fade','glass','solid','none'].indexOf(navStyle) === -1) navStyle = 'fade';
-    document.body.setAttribute('data-navbar-style', navStyle);
+    root.setAttribute('data-navbar-style', navStyle);
+    if (document.body) document.body.setAttribute('data-navbar-style', navStyle);
     var vis = (s.navbarVisibility == null) ? 100 : Number(s.navbarVisibility);
     if (!isFinite(vis)) vis = 100;
     vis = Math.max(0, Math.min(100, vis));
-    var header = document.querySelector('.top-header');
-    if (header) header.style.setProperty('--nav-vis', (vis / 100).toFixed(3));
+    root.style.setProperty('--nav-vis', (vis / 100).toFixed(3));
 
     if (s.colors) {
       var map = {
@@ -164,6 +167,10 @@
         .then(function (raw) {
           self.data = migrate(raw);
           apply(self.data);
+          // Cache for the next visit — the head-script reads this before
+          // first paint to avoid the dark-theme flash.
+          try { localStorage.setItem('site.settings.cache', JSON.stringify(self.data)); }
+          catch (e) { /* localStorage full or disabled — ignore */ }
           return self.data;
         });
       return this._promise;

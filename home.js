@@ -49,20 +49,40 @@
   // Prefer the runtime endpoint (reads from Vercel KV) so admin changes
   // show up without a redeploy. If it's unreachable, fall through to
   // the static file in the repo.
+  // Live fetch + localStorage cache. Cached result renders the list
+  // instantly on repeat visits; the live fetch updates the cache in
+  // the background for next time.
   function fetchManifest() {
-    // Belt-and-suspenders: try the runtime endpoint, fall back to the
-    // static file if the API is unreachable OR if it returns empty
-    // (e.g. KV configured but not yet seeded, function bug, etc.).
-    return fetch('/api/data/index', { cache: 'no-store' })
+    var cacheKey = 'journal.cache.manifest';
+    var live = fetch('/api/data/index', { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; })
       .then(function (data) {
-        if (data && Array.isArray(data.entries) && data.entries.length) return data;
+        if (data && Array.isArray(data.entries) && data.entries.length) {
+          try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
+          return data;
+        }
         return fetch('data/index.json').then(function (r) {
           if (!r.ok) throw new Error(r.status);
           return r.json();
         });
       });
+    try {
+      var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+      if (cached && Array.isArray(cached.entries) && cached.entries.length) {
+        // Render the cache immediately, then re-render with the live
+        // result so any admin edits appear without forcing a refresh.
+        live.then(function (fresh) {
+          if (fresh && JSON.stringify(fresh) !== JSON.stringify(cached)) {
+            var all = (fresh.entries || []);
+            entries = all.filter(function (e) { return e.published !== false; });
+            render(false);
+          }
+        }).catch(function () {});
+        return Promise.resolve(cached);
+      }
+    } catch (e) {}
+    return live;
   }
 
   fetchManifest()

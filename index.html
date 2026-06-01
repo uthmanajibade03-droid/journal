@@ -9,6 +9,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <!-- Apply the cached theme synchronously, before first paint, so the
+       page doesn't flash dark while settings.js fetches the latest from
+       the API. Cache is refreshed by settings.js on each successful
+       fetch, so this is always at-most-one-visit stale. -->
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('site.settings.cache') || '{}');
+        var r = document.documentElement;
+        if (s.colors) {
+          var map = { bg:'--bg', panel:'--panel', navbar:'--navbar', fg:'--fg', muted:'--muted', accent:'--accent' };
+          for (var k in map) if (s.colors[k]) r.style.setProperty(map[k], s.colors[k]);
+        }
+        if (s.navbarStyle) r.setAttribute('data-navbar-style', s.navbarStyle);
+        if (s.navbarVisibility != null) r.style.setProperty('--nav-vis', (Number(s.navbarVisibility) / 100).toFixed(3));
+      } catch (e) { /* never block render on cache parsing */ }
+    })();
+  </script>
 </head>
 <body class="home">
   <!-- Liquid Glass refraction filter. Combined with backdrop-filter blur,
