@@ -15,8 +15,17 @@
     "accent": "#f74b4b"
   },
   "socials": [
-    { "label": "X / Twitter", "url": "https://x.com/" },
-    { "label": "RSS", "url": "/feed.xml" },
-    { "label": "Email", "url": "mailto:uthmanajibade03@gmail.com" }
+    {
+      "label": "Instagram",
+      "url": "https://instagram.com/uthmanajib"
+    },
+    {
+      "label": "X / Twitter",
+      "url": "s"
+    },
+    {
+      "label": "Email",
+      "url": "mailto:uthmanajibade03@gmail.com"
+    }
   ]
 }
