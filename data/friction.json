@@ -16,14 +16,57 @@
     ]
   },
   "branches": [
-    { "label": "More friction, less luck", "detail": "The more friction, the lower the chance of reaching goals.", "align": "left", "x": 422, "y": 419.224, "w": 316 },
-    { "label": "Remove the steps", "detail": "Every extra step is another decision point you can lose at.", "align": "right", "x": 784, "y": 380.19, "w": 220, "focused": true },
-    { "label": "Pre-stage everything", "detail": "Lay out clothes, open the doc, put the book on the desk.", "align": "left", "x": 376.132, "y": 148.27, "w": 268 }
+    {
+      "label": "More friction, less luck",
+      "detail": "The more friction, the lower the chance of reaching goals.",
+      "align": "left",
+      "x": 20,
+      "y": 70,
+      "w": 360
+    },
+    {
+      "label": "Remove the steps",
+      "detail": "Every extra step is another decision point you can lose at.",
+      "align": "right",
+      "x": 645,
+      "y": 70,
+      "w": 360,
+      "focused": true
+    },
+    {
+      "label": "Pre-stage everything",
+      "detail": "Lay out clothes, open the doc, put the book on the desk.",
+      "align": "left",
+      "x": 20,
+      "y": 430,
+      "w": 360
+    },
+    {
+      "label": "plan",
+      "detail": "If you don't have a scheduled day, you'll be pulled everywhere",
+      "align": "right",
+      "x": 645,
+      "y": 430,
+      "w": 360
+    }
   ],
   "arrows": [
-    { "d": "M 485.3 335.4 Q 465.8 377.8 430.4 408.1", "head": "430.434862493794,408.05036080159084 434.046318625512,399.8067338929616 439.1372344157007,405.75499091139653" },
-    { "d": "M 586.2 321.9 Q 674.1 363.4 770.6 376.2", "head": "770.5714248165675,376.2310262382789 762.0229685236252,379.0459676244636 763.0525998347259,371.28458601399285" },
-    { "d": "M 480.8 265.2 Q 418.3 225.3 385.5 158.7", "head": "385.471149798544,158.69923584475998 392.5625929675882,164.24102560802382 385.53822851278414,167.69898586607147" }
+    {
+      "d": "M 445.0 260.0 Q 412.5 172.0 380.0 124.0",
+      "head": "380.0,124.0 388.8,130.9 379.8,135.2"
+    },
+    {
+      "d": "M 580.0 260.0 Q 610.0 172.0 640.0 124.0",
+      "head": "640.0,124.0 640.5,135.2 631.4,131.1"
+    },
+    {
+      "d": "M 445.0 340.0 Q 412.5 413.0 380.0 446.0",
+      "head": "380.0,446.0 381.0,434.9 389.5,440.1"
+    },
+    {
+      "d": "M 580.0 340.0 Q 610.0 413.0 640.0 446.0",
+      "head": "640.0,446.0 630.7,439.8 639.4,434.8"
+    }
   ],
   "footer": "Friction is the silent tax on every goal — pay it down before you need the energy."
 }
