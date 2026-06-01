@@ -434,7 +434,7 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   font-size: 12px;
 }
 .preset-swatch:hover { border-color: var(--line-strong); background: var(--panel-2); }
-.preset-swatch > span:not(.preset-name) {
+.preset-swatch > span:not(.preset-name):not(.preset-remove) {
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -442,6 +442,36 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   border: 1px solid var(--line);
 }
 .preset-name { margin-left: 4px; }
+.preset-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--line-strong);
+  margin: 0 2px;
+}
+.preset-custom-host {
+  display: contents; /* the buttons live inside but flow within the preset row */
+}
+.preset-swatch.is-custom { padding-right: 4px; }
+.preset-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-left: 2px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+.preset-remove:hover {
+  color: var(--danger);
+  background: rgba(227, 97, 97, 0.12);
+}
+.preset-save-btn { margin-left: auto; }
 
 /* ─── Theme color grid ────────────────────────────────────────────── */
 .colors-grid {

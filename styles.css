@@ -60,8 +60,13 @@ body.home { position: relative; min-height: 100vh; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; align-items: center;
   padding: 22px var(--page-px) 16px;
+  /* Track --bg so changing the theme's background colour also re-tints
+     the fixed navbar fade. color-mix lets us keep the same alpha ramp. */
   background:
-    linear-gradient(180deg, rgba(11,11,12,0.78) 0%, rgba(11,11,12,0.55) 60%, transparent 100%);
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--bg) 78%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 55%, transparent) 60%,
+      transparent 100%);
   backdrop-filter: blur(2px);
 }
 .brand {

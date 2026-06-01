@@ -256,7 +256,7 @@
     var brandIn = $('#settings-form [name="brand"]');
     if (brandIn) brandIn.addEventListener('input', updatePreview);
 
-    // Preset palette buttons
+    // Built-in preset buttons (custom ones are wired in renderCustomPresets)
     $$('.preset-swatch[data-preset]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         applyPalette(PALETTE_PRESETS[btn.dataset.preset]);
@@ -269,6 +269,9 @@
       var accentHex = ($('#settings-form [data-color-hex="accent"]') || {}).value || COLOR_DEFAULTS.accent;
       applyPalette(suggestPaletteFromAccent(accentHex));
     });
+
+    // "Save current palette as a named preset"
+    $('#save-preset').addEventListener('click', saveCurrentAsPreset);
 
     // Slug auto-fill from title when slug is empty
     var titleIn = $('#editor-form [name="title"]');
@@ -557,6 +560,101 @@
     updatePreview();
   }
 
+  function currentColors() {
+    var f = $('#settings-form');
+    var out = {};
+    COLOR_KEYS.forEach(function (k) {
+      var hex = f.querySelector('[data-color-hex="' + k + '"]');
+      var picker = f.querySelector('[data-color-key="' + k + '"]');
+      out[k] = (hex && hex.value.trim()) || (picker && picker.value) || COLOR_DEFAULTS[k];
+    });
+    return out;
+  }
+
+  function renderCustomPresets() {
+    var host = $('#preset-custom-host');
+    var divider = $('#preset-divider');
+    if (!host || !divider) return;
+    var names = Object.keys((state.settings && state.settings.customPresets) || {});
+    host.innerHTML = '';
+    divider.hidden = names.length === 0;
+    names.forEach(function (name) {
+      var p = state.settings.customPresets[name];
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'preset-swatch is-custom';
+      btn.title = name + ' (custom)';
+      btn.innerHTML =
+        '<span style="background:' + escapeHTML(p.bg) + '"></span>' +
+        '<span style="background:' + escapeHTML(p.panel) + '"></span>' +
+        '<span style="background:' + escapeHTML(p.accent) + '"></span>' +
+        '<span class="preset-name">' + escapeHTML(name) + '</span>' +
+        '<button type="button" class="preset-remove" title="Delete preset" aria-label="Delete preset">✕</button>';
+      btn.addEventListener('click', function (ev) {
+        if (ev.target.closest('.preset-remove')) return;  // delete is its own click
+        applyPalette(p);
+      });
+      btn.querySelector('.preset-remove').addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        if (!confirm('Delete preset "' + name + '"?')) return;
+        delete state.settings.customPresets[name];
+        renderCustomPresets();
+        // Persist immediately so the user doesn't have to also hit Save.
+        persistSettings({ silent: true });
+      });
+      host.appendChild(btn);
+    });
+  }
+
+  function saveCurrentAsPreset() {
+    var name = window.prompt('Name this palette (e.g. "Sunset", "Mono Mint")');
+    if (!name) return;
+    name = name.trim().slice(0, 40);
+    if (!name) return;
+    if (!state.settings) state.settings = {};
+    if (!state.settings.customPresets) state.settings.customPresets = {};
+    if (state.settings.customPresets[name]) {
+      if (!confirm('A preset named "' + name + '" already exists. Replace it?')) return;
+    }
+    state.settings.customPresets[name] = currentColors();
+    renderCustomPresets();
+    persistSettings({ silent: false, statusMsg: 'Preset "' + name + '" saved.' });
+  }
+
+  // Save settings to GitHub. Used by both the main Save button and the
+  // preset add/remove actions so custom presets persist immediately.
+  function persistSettings(opts) {
+    opts = opts || {};
+    var data = collectSettingsForm();
+    var statusEl = $('#settings-status');
+    if (!opts.silent) setStatus(statusEl, 'Saving…');
+    return api('settings', { method: 'PUT', body: data }).then(function (res) {
+      state.settings = res.settings || data;
+      if (!opts.silent) setStatus(statusEl, opts.statusMsg || 'Saved · publishing…', 'ok');
+    }).catch(function (err) {
+      setStatus(statusEl, 'Save failed: ' + err.message, 'err');
+    });
+  }
+
+  function collectSettingsForm() {
+    var f = $('#settings-form');
+    var data = {
+      brand: f.querySelector('[name="brand"]').value.trim(),
+      heroTagline: f.querySelector('[name="heroTagline"]').value,
+      heroEmFromLine: parseInt(f.querySelector('[name="heroEmFromLine"]').value, 10) || 3,
+      footerTagline: f.querySelector('[name="footerTagline"]').value.trim(),
+      subscribeTagline: f.querySelector('[name="subscribeTagline"]').value.trim(),
+      bottomTag: f.querySelector('[name="bottomTag"]').value.trim(),
+      year: parseInt(f.querySelector('[name="year"]').value, 10),
+      contactEmail: f.querySelector('[name="contactEmail"]').value.trim(),
+      colors: currentColors(),
+      socials: collectSocials()
+    };
+    var customPresets = state.settings && state.settings.customPresets;
+    if (customPresets && Object.keys(customPresets).length) data.customPresets = customPresets;
+    return data;
+  }
+
   // ─── Settings ─────────────────────────────────────────────────────
   function addSocialRow(s) {
     var box = $('#socials-list');
@@ -600,6 +698,8 @@
       $('#socials-list').innerHTML = '';
       (s.socials || []).forEach(addSocialRow);
       if (!(s.socials || []).length) addSocialRow({ label: '', url: '' });
+      // Custom presets (kept on state.settings so the host can render them)
+      renderCustomPresets();
       updatePreview();
       setStatus($('#settings-status'), '');
     }).catch(function (err) {
@@ -622,36 +722,12 @@
       out.socials = legacy;
     }
     if (!out.contactEmail && s.email) out.contactEmail = s.email;
+    if (!out.customPresets || typeof out.customPresets !== 'object') out.customPresets = {};
     return out;
   }
 
   function saveSettings() {
-    var f = $('#settings-form');
-    var colors = {};
-    COLOR_KEYS.forEach(function (k) {
-      var hex = f.querySelector('[data-color-hex="' + k + '"]');
-      var picker = f.querySelector('[data-color-key="' + k + '"]');
-      colors[k] = (hex && hex.value.trim()) || (picker && picker.value) || COLOR_DEFAULTS[k];
-    });
-    var data = {
-      brand: f.querySelector('[name="brand"]').value.trim(),
-      heroTagline: f.querySelector('[name="heroTagline"]').value,
-      heroEmFromLine: parseInt(f.querySelector('[name="heroEmFromLine"]').value, 10) || 3,
-      footerTagline: f.querySelector('[name="footerTagline"]').value.trim(),
-      subscribeTagline: f.querySelector('[name="subscribeTagline"]').value.trim(),
-      bottomTag: f.querySelector('[name="bottomTag"]').value.trim(),
-      year: parseInt(f.querySelector('[name="year"]').value, 10),
-      contactEmail: f.querySelector('[name="contactEmail"]').value.trim(),
-      colors: colors,
-      socials: collectSocials()
-    };
-    setStatus($('#settings-status'), 'Saving…');
-    api('settings', { method: 'PUT', body: data }).then(function (res) {
-      state.settings = res.settings || data;
-      setStatus($('#settings-status'), 'Saved · publishing…', 'ok');
-    }).catch(function (err) {
-      setStatus($('#settings-status'), 'Save failed: ' + err.message, 'err');
-    });
+    persistSettings({ silent: false });
   }
 
   init();
