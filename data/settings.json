@@ -8,11 +8,11 @@
   "year": 2026,
   "contactEmail": "uthmanajibade03@gmail.com",
   "colors": {
-    "bg": "#0a0e0a",
-    "panel": "#101410",
-    "fg": "#eaf0e8",
-    "muted": "#8a948a",
-    "accent": "#7dc080"
+    "bg": "#0a0a0a",
+    "panel": "#111111",
+    "fg": "#f5f1e8",
+    "muted": "#8a8275",
+    "accent": "#f74b4b"
   },
   "socials": [
     {
