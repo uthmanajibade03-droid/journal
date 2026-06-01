@@ -10,6 +10,7 @@
   "colors": {
     "bg": "#ffffff",
     "panel": "#ffffff",
+    "navbar": "#0b0b0c",
     "fg": "#000000",
     "muted": "#8a8275",
     "accent": "#f74b4b"
@@ -27,5 +28,15 @@
       "label": "Email",
       "url": "mailto:uthmanajibade03@gmail.com"
     }
-  ]
+  ],
+  "customPresets": {
+    "white-red-darkNav": {
+      "bg": "#ffffff",
+      "panel": "#ffffff",
+      "navbar": "#0b0b0c",
+      "fg": "#000000",
+      "muted": "#8a8275",
+      "accent": "#f74b4b"
+    }
+  }
 }
