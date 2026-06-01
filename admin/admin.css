@@ -314,6 +314,7 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
 .theme-preview {
   --tp-bg: var(--bg);
   --tp-panel: var(--panel);
+  --tp-navbar: #0b0b0c;
   --tp-fg: var(--fg);
   --tp-muted: var(--muted);
   --tp-accent: var(--accent);
@@ -324,6 +325,21 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 22px;
+  position: relative;
+}
+.tp-navbar {
+  height: 26px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tp-navbar) 78%, transparent) 0%,
+    color-mix(in srgb, var(--tp-navbar) 55%, transparent) 60%,
+    transparent 100%);
+  /* Sit over the frame so the gradient blends into the preview bg below,
+     just like the real navbar does on the public site. */
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: background 200ms ease;
 }
 .theme-preview-frame {
   background: var(--tp-bg);
@@ -332,6 +348,7 @@ button.danger:hover { background: rgba(227, 97, 97, 0.08); }
   flex-direction: column;
   gap: 14px;
   transition: background 200ms ease;
+  position: relative;
 }
 .tp-brand {
   font-family: 'Instrument Serif', serif;

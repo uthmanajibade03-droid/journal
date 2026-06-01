@@ -3,20 +3,21 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   var TOKEN_KEY = 'admin.token';
-  var COLOR_KEYS = ['bg', 'panel', 'fg', 'muted', 'accent'];
+  var COLOR_KEYS = ['bg', 'panel', 'navbar', 'fg', 'muted', 'accent'];
   var COLOR_DEFAULTS = {
     bg: '#0a0a0a',
     panel: '#111111',
+    navbar: '#0b0b0c',
     fg: '#f5f1e8',
     muted: '#8a8275',
     accent: '#f6c54a'
   };
   var PALETTE_PRESETS = {
-    amber:   { bg:'#0a0a0a', panel:'#111111', fg:'#f5f1e8', muted:'#8a8275', accent:'#f6c54a' },
-    crimson: { bg:'#0c0608', panel:'#160c0e', fg:'#f3e9e9', muted:'#9a8585', accent:'#e3535a' },
-    forest:  { bg:'#0a0e0a', panel:'#101410', fg:'#eaf0e8', muted:'#8a948a', accent:'#7dc080' },
-    steel:   { bg:'#0b0e12', panel:'#13171c', fg:'#e5edf3', muted:'#7d8a99', accent:'#5d9bff' },
-    sand:    { bg:'#f5efe1', panel:'#fffbf0', fg:'#241f17', muted:'#7c6f56', accent:'#9e6b21' }
+    amber:   { bg:'#0a0a0a', panel:'#111111', navbar:'#0b0b0c', fg:'#f5f1e8', muted:'#8a8275', accent:'#f6c54a' },
+    crimson: { bg:'#0c0608', panel:'#160c0e', navbar:'#0a0506', fg:'#f3e9e9', muted:'#9a8585', accent:'#e3535a' },
+    forest:  { bg:'#0a0e0a', panel:'#101410', navbar:'#080c08', fg:'#eaf0e8', muted:'#8a948a', accent:'#7dc080' },
+    steel:   { bg:'#0b0e12', panel:'#13171c', navbar:'#090c10', fg:'#e5edf3', muted:'#7d8a99', accent:'#5d9bff' },
+    sand:    { bg:'#f5efe1', panel:'#fffbf0', navbar:'#2a2520', fg:'#241f17', muted:'#7c6f56', accent:'#9e6b21' }
   };
 
   // ─── Tiny HSL helpers for the "Suggest palette" feature ──────────
@@ -66,6 +67,7 @@
     return {
       bg:     hslToHex(hsl.h, 12, 4),
       panel:  hslToHex(hsl.h, 10, 7),
+      navbar: hslToHex(hsl.h, 14, 3),
       fg:     hslToHex(hsl.h, 14, 93),
       muted:  hslToHex(hsl.h, 10, 55),
       accent: accentHex

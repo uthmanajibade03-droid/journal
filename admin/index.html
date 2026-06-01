@@ -136,6 +136,7 @@
 
         <!-- Live preview of the public-site palette + brand text -->
         <div class="theme-preview" id="theme-preview" aria-hidden="true">
+          <div class="tp-navbar"></div>
           <div class="theme-preview-frame">
             <div class="tp-brand"><span class="tp-brand-text">uthman</span></div>
             <div class="tp-card">
@@ -143,7 +144,7 @@
               <div class="tp-meta">4 MIN · MAY 2026<span class="tp-tag">▸ Latest</span></div>
             </div>
             <div class="tp-rule"></div>
-            <div class="tp-hint">background · panel · text · muted · <span class="tp-accent-name">accent</span></div>
+            <div class="tp-hint">navbar · background · panel · text · muted · <span class="tp-accent-name">accent</span></div>
           </div>
         </div>
 
@@ -215,6 +216,7 @@
             <div class="colors-grid" id="colors-grid">
               <label class="color-field"><span>Background</span><span class="color-desc">page colour behind everything</span><span class="color-row"><input type="color" data-color-key="bg" /><input type="text" data-color-hex="bg" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Panel</span><span class="color-desc">cards, form surfaces, footer</span><span class="color-row"><input type="color" data-color-key="panel" /><input type="text" data-color-hex="panel" pattern="#[0-9a-fA-F]{6}" /></span></label>
+              <label class="color-field"><span>Nav bar</span><span class="color-desc">fixed bar at the top of the page (fades into transparency)</span><span class="color-row"><input type="color" data-color-key="navbar" /><input type="text" data-color-hex="navbar" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Text</span><span class="color-desc">main reading copy</span><span class="color-row"><input type="color" data-color-key="fg" /><input type="text" data-color-hex="fg" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Muted</span><span class="color-desc">dates, hints, secondary text</span><span class="color-row"><input type="color" data-color-key="muted" /><input type="text" data-color-hex="muted" pattern="#[0-9a-fA-F]{6}" /></span></label>
               <label class="color-field"><span>Accent</span><span class="color-desc">highlights, focused branch, links</span><span class="color-row"><input type="color" data-color-key="accent" /><input type="text" data-color-hex="accent" pattern="#[0-9a-fA-F]{6}" /></span></label>

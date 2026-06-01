@@ -13,6 +13,7 @@
     contactEmail: 'hi@uthman.xyz',
     year: new Date().getFullYear(),
     colors: {
+      navbar: '#0b0b0c',
       accent: '#f6c54a'
     },
     socials: [
@@ -68,6 +69,7 @@
       var map = {
         bg: '--bg',
         panel: '--panel',
+        navbar: '--navbar',
         fg: '--fg',
         muted: '--muted',
         accent: '--accent'
