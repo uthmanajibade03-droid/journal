@@ -50,9 +50,14 @@
   // show up without a redeploy. If it's unreachable, fall through to
   // the static file in the repo.
   function fetchManifest() {
+    // Belt-and-suspenders: try the runtime endpoint, fall back to the
+    // static file if the API is unreachable OR if it returns empty
+    // (e.g. KV configured but not yet seeded, function bug, etc.).
     return fetch('/api/data/index', { cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .catch(function () {
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (data) {
+        if (data && Array.isArray(data.entries) && data.entries.length) return data;
         return fetch('data/index.json').then(function (r) {
           if (!r.ok) throw new Error(r.status);
           return r.json();

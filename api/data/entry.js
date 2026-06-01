@@ -1,8 +1,19 @@
 /* /api/data/entry?id=<slug> — public read of one journal entry. */
 const kv = require('../_lib/kv.js');
+const fs = require('fs');
+const path = require('path');
 
-const FALLBACK_BASE = process.env.JOURNAL_FALLBACK_URL ||
-  (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000');
+// Read the bundled static fallback synchronously at function load time.
+// vercel.json's `includeFiles` ensures the data/ folder ships with the
+// function so this works without any runtime self-fetch.
+function readStatic(id) {
+  try {
+    const p = path.join(process.cwd(), 'data', id + '.json');
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch (e) {
+    return null;
+  }
+}
 
 module.exports = async function handler(req, res) {
   try {
@@ -16,13 +27,12 @@ module.exports = async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
 
     let data = null;
-    if (kv.configured()) data = await kv.get('journal:entry:' + id);
-    if (!data) {
-      try {
-        const r = await fetch(FALLBACK_BASE + '/data/' + id + '.json', { cache: 'no-store' });
-        if (r.ok) data = await r.json();
-      } catch (e) { /* swallow */ }
+    if (kv.configured()) {
+      try { data = await kv.get('journal:entry:' + id); }
+      catch (e) { console.warn('kv.get entry failed:', e.message); }
     }
+    if (!data) data = readStatic(id);
+
     if (!data) {
       res.statusCode = 404;
       res.end(JSON.stringify({ error: 'not found' }));

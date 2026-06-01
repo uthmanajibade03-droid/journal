@@ -127,12 +127,14 @@
   var id = param('id');
   if (!id) { renderError('Missing entry id', '404'); return; }
 
-  // Runtime endpoints (Vercel KV) with static-file fallback. Same pattern
-  // as home.js so admin edits show up without redeploying.
+  // Runtime endpoints with static-file fallback. Treat empty/null as a
+  // miss too, so the public site never goes blank because of an API hiccup.
   function fetchEntry(slug) {
     return fetch('/api/data/entry?id=' + encodeURIComponent(slug), { cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error('entry ' + r.status); return r.json(); })
-      .catch(function () {
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (data) {
+        if (data && data.id) return data;
         return fetch('data/' + encodeURIComponent(slug) + '.json').then(function (r) {
           if (!r.ok) throw new Error('entry ' + r.status);
           return r.json();
@@ -141,8 +143,10 @@
   }
   function fetchManifest() {
     return fetch('/api/data/index', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : { entries: [] }; })
-      .catch(function () {
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (data) {
+        if (data && Array.isArray(data.entries) && data.entries.length) return data;
         return fetch('data/index.json')
           .then(function (r) { return r.ok ? r.json() : { entries: [] }; })
           .catch(function () { return { entries: [] }; });
