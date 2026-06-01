@@ -127,13 +127,29 @@
   var id = param('id');
   if (!id) { renderError('Missing entry id', '404'); return; }
 
-  Promise.all([
-    fetch('data/' + encodeURIComponent(id) + '.json').then(function (r) {
-      if (!r.ok) throw new Error('entry ' + r.status);
-      return r.json();
-    }),
-    fetch('data/index.json').then(function (r) { return r.ok ? r.json() : { entries: [] }; }).catch(function () { return { entries: [] }; })
-  ]).then(function (results) {
+  // Runtime endpoints (Vercel KV) with static-file fallback. Same pattern
+  // as home.js so admin edits show up without redeploying.
+  function fetchEntry(slug) {
+    return fetch('/api/data/entry?id=' + encodeURIComponent(slug), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('entry ' + r.status); return r.json(); })
+      .catch(function () {
+        return fetch('data/' + encodeURIComponent(slug) + '.json').then(function (r) {
+          if (!r.ok) throw new Error('entry ' + r.status);
+          return r.json();
+        });
+      });
+  }
+  function fetchManifest() {
+    return fetch('/api/data/index', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : { entries: [] }; })
+      .catch(function () {
+        return fetch('data/index.json')
+          .then(function (r) { return r.ok ? r.json() : { entries: [] }; })
+          .catch(function () { return { entries: [] }; });
+      });
+  }
+
+  Promise.all([fetchEntry(id), fetchManifest()]).then(function (results) {
     renderEntry(results[0], results[1]);
   }).catch(function (err) {
     console.error('Failed to load entry:', err);

@@ -1,10 +1,25 @@
 /* Shared helpers for the dashboard's serverless endpoints.
    Lives under /api/_lib/ — the leading underscore tells Vercel not to
-   deploy this as its own function. The other files in /api/admin/
-   require it for GitHub access and entry processing. */
+   deploy this as its own function.
+
+   Data lives in Vercel KV. Reads fall back to a single GitHub fetch of
+   the static /data/*.json files so a fresh deploy works before the
+   first admin save. Writes go only to KV (instant, no deploy). */
+
+const kv = require('./kv.js');
 
 const REPO_FALLBACK = 'uthmanajibade03-droid/journal';
 const BRANCH_FALLBACK = 'main';
+
+// Map data/foo.json paths to KV keys. Anything outside this map is
+// considered an admin programming error.
+function pathToKey(path) {
+  if (path === 'data/index.json') return 'journal:manifest';
+  if (path === 'data/settings.json') return 'journal:settings';
+  const m = /^data\/(.+)\.json$/.exec(path);
+  if (m) return 'journal:entry:' + m[1];
+  return null;
+}
 
 function getRepo() {
   if (process.env.VERCEL_GIT_REPO_OWNER && process.env.VERCEL_GIT_REPO_SLUG) {
@@ -50,7 +65,7 @@ function makeGh(token) {
 
 function b64decode(s) { return Buffer.from(s, 'base64').toString('utf8'); }
 
-async function readJSON(ctx, path) {
+async function readJSONFromGit(ctx, path) {
   try {
     const r = await ctx.gh('/repos/' + ctx.repo + '/contents/' + path + '?ref=' + ctx.branch);
     return r && r.content ? JSON.parse(b64decode(r.content.replace(/\n/g, ''))) : null;
@@ -60,39 +75,38 @@ async function readJSON(ctx, path) {
   }
 }
 
-async function commitFiles(ctx, message, files) {
-  const refData = await ctx.gh('/repos/' + ctx.repo + '/git/refs/heads/' + ctx.branch);
-  const parentSha = refData.object.sha;
-  const parentCommit = await ctx.gh('/repos/' + ctx.repo + '/git/commits/' + parentSha);
-  const baseTreeSha = parentCommit.tree.sha;
+async function readJSON(ctx, path) {
+  const key = pathToKey(path);
+  if (key && kv.configured()) {
+    const val = await kv.get(key);
+    if (val !== null) return val;
+  }
+  // Fallback to the static file shipped in the repo. This lets a fresh
+  // deploy load existing content before anything has been written to KV.
+  return readJSONFromGit(ctx, path);
+}
 
-  const tree = [];
+async function commitFiles(ctx, message, files) {
+  // Writes go to KV — no git commit, no Vercel rebuild, instant.
+  if (!kv.configured()) {
+    const e = new Error('Vercel KV not configured. Enable a KV database in the Vercel project Storage tab so the dashboard can save without redeploying.');
+    e.status = 500;
+    throw e;
+  }
   for (const f of files) {
+    const key = pathToKey(f.path);
+    if (!key) {
+      // Unknown path — log and skip (should never happen for content paths)
+      console.warn('commitFiles: unsupported path', f.path);
+      continue;
+    }
     if (f.content === null || f.content === undefined) {
-      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
+      await kv.del(key);
     } else {
-      const blob = await ctx.gh('/repos/' + ctx.repo + '/git/blobs', {
-        method: 'POST',
-        body: { content: f.content, encoding: 'utf-8' }
-      });
-      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+      const value = typeof f.content === 'string' ? JSON.parse(f.content) : f.content;
+      await kv.set(key, value);
     }
   }
-
-  const newTree = await ctx.gh('/repos/' + ctx.repo + '/git/trees', {
-    method: 'POST',
-    body: { base_tree: baseTreeSha, tree: tree }
-  });
-
-  const commit = await ctx.gh('/repos/' + ctx.repo + '/git/commits', {
-    method: 'POST',
-    body: { message: message, tree: newTree.sha, parents: [parentSha] }
-  });
-
-  await ctx.gh('/repos/' + ctx.repo + '/git/refs/heads/' + ctx.branch, {
-    method: 'PATCH',
-    body: { sha: commit.sha, force: false }
-  });
 }
 
 // ─── Auto-layout for branches and arrows ──────────────────────────

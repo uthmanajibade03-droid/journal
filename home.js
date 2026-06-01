@@ -46,8 +46,21 @@
     if (moreBtn) moreBtn.style.display = 'none';
   }
 
-  fetch('data/index.json')
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  // Prefer the runtime endpoint (reads from Vercel KV) so admin changes
+  // show up without a redeploy. If it's unreachable, fall through to
+  // the static file in the repo.
+  function fetchManifest() {
+    return fetch('/api/data/index', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .catch(function () {
+        return fetch('data/index.json').then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          return r.json();
+        });
+      });
+  }
+
+  fetchManifest()
     .then(function (data) {
       var all = (data && data.entries) || [];
       entries = all.filter(function (e) { return e.published !== false; });

@@ -150,9 +150,17 @@
     load: function () {
       if (this._promise) return this._promise;
       var self = this;
-      this._promise = fetch('/data/settings.json', { cache: 'no-cache' })
+      // Prefer the runtime endpoint (Vercel KV); fall back to the static
+      // file in the repo if the function is unreachable.
+      this._promise = fetch('/api/data/settings', { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; })
+        .then(function (s) {
+          if (s && Object.keys(s).length) return s;
+          return fetch('/data/settings.json', { cache: 'no-cache' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .catch(function () { return null; });
+        })
         .then(function (raw) {
           self.data = migrate(raw);
           apply(self.data);
