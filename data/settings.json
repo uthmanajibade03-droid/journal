@@ -7,6 +7,8 @@
   "bottomTag": "A topic in the middle, arrows out.",
   "year": 2026,
   "contactEmail": "uthmanajibade03@gmail.com",
+  "navbarStyle": "glass",
+  "navbarVisibility": 100,
   "colors": {
     "bg": "#ffffff",
     "panel": "#ffffff",
