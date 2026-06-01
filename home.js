@@ -39,11 +39,13 @@
     for (var i = 0; i < slice.length; i++) html += rowHTML(slice[i], i === 0);
     listEl.innerHTML = html;
     if (moreBtn) moreBtn.style.display = entries.length > INITIAL && !showAll ? '' : 'none';
+    if (window.__ready) window.__ready.markContent();
   }
 
   function showError(msg) {
     listEl.innerHTML = '<li style="font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-left:64px">' + msg + '</li>';
     if (moreBtn) moreBtn.style.display = 'none';
+    if (window.__ready) window.__ready.markContent();
   }
 
   // Prefer the runtime endpoint (reads from Vercel KV) so admin changes

@@ -167,10 +167,8 @@
         .then(function (raw) {
           self.data = migrate(raw);
           apply(self.data);
-          // Cache for the next visit — the head-script reads this before
-          // first paint to avoid the dark-theme flash.
-          try { localStorage.setItem('site.settings.cache', JSON.stringify(self.data)); }
-          catch (e) { /* localStorage full or disabled — ignore */ }
+          try { localStorage.setItem('site.settings.cache', JSON.stringify(self.data)); } catch (e) {}
+          if (window.__ready) window.__ready.markSettings();
           return self.data;
         });
       return this._promise;

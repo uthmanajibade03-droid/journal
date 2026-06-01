@@ -113,9 +113,11 @@
         if (mm) mm.classList.add('is-ready');
       });
     });
+    if (window.__ready) window.__ready.markContent();
   }
 
   function renderError(msg, sub) {
+    if (window.__ready) window.__ready.markContent();
     main.innerHTML =
       '<div class="entry-head">' +
         '<p class="entry-eyebrow">' + escapeHTML(sub || '') + '</p>' +
