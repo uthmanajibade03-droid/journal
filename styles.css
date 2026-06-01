@@ -81,11 +81,12 @@ body:not([data-navbar-style]) .top-header {
   -webkit-backdrop-filter: blur(2px);
 }
 
-/* Glass — iOS Liquid Glass recipe (the CSS-achievable subset). Tuned to
-   stay visible on both dark AND light backgrounds: a tint that's strong
-   enough to read over white, a multi-edge inner rim that combines a
-   bright top highlight (shows on dark) with a thin dark outline (shows
-   on light), plus a layered outer drop-shadow. */
+/* Glass — actual Liquid Glass. The url(#liquid-glass) in backdrop-filter
+   is an inline SVG feTurbulence + feDisplacementMap that displaces the
+   pixels behind the bar by a noise pattern. THAT is what creates the
+   warping "liquid" look — plain blur can only smear. Combined with the
+   blur/saturate/brightness/contrast stack and the multi-edge rim, this
+   reproduces the CSS-achievable subset of iOS Liquid Glass. */
 body[data-navbar-style="glass"] .top-header {
   background:
     radial-gradient(ellipse 70% 120% at 50% 0%,
@@ -95,19 +96,25 @@ body[data-navbar-style="glass"] .top-header {
       color-mix(in srgb, white calc(10% * var(--nav-vis)), transparent) 0%,
       transparent 100%),
     color-mix(in srgb, var(--navbar) calc(14% * var(--nav-vis)), transparent);
-  backdrop-filter: blur(40px) saturate(200%) brightness(108%) contrast(108%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(108%) contrast(108%);
+  backdrop-filter: url(#liquid-glass) blur(8px) saturate(200%) brightness(108%) contrast(108%);
+  -webkit-backdrop-filter: url(#liquid-glass) blur(8px) saturate(200%) brightness(108%) contrast(108%);
   box-shadow:
-    /* Bright top edge — reads as glass on dark bgs */
     inset 0 1px 0 color-mix(in srgb, white calc(50% * var(--nav-vis)), transparent),
-    /* Thin dark rim around the whole bar — reads as glass on light bgs */
     inset 0 0 0 1px color-mix(in srgb, black calc(8% * var(--nav-vis)), transparent),
-    /* Bottom edge slightly darker for depth */
     inset 0 -1px 0 color-mix(in srgb, black calc(10% * var(--nav-vis)), transparent),
-    /* Two-layer outer drop-shadow: close + far = floating element */
     0 2px 4px color-mix(in srgb, black calc(10% * var(--nav-vis)), transparent),
     0 8px 24px color-mix(in srgb, black calc(16% * var(--nav-vis)), transparent);
   border-bottom: none;
+}
+
+/* Safari doesn't support url() references inside backdrop-filter as of
+   late 2025. Fall back to a stronger blur so Safari users still get a
+   recognisable glass effect, just without the refractive warp. */
+@supports (-webkit-touch-callout: none) {
+  body[data-navbar-style="glass"] .top-header {
+    backdrop-filter: blur(40px) saturate(200%) brightness(108%) contrast(108%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(108%) contrast(108%);
+  }
 }
 
 /* Solid — opaque navbar with a hairline at the bottom. */
