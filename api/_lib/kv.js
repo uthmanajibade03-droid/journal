@@ -2,8 +2,11 @@
    The leading underscore folder keeps Vercel from deploying this as
    its own function. Other files require() it. */
 
-const URL = process.env.KV_REST_API_URL;
-const TOKEN = process.env.KV_REST_API_TOKEN;
+// Vercel KV was rebranded into Marketplace integrations (mainly Upstash
+// Redis). Different integrations inject different env-var names, so
+// accept either the legacy KV_* names or the Upstash-native ones.
+const URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
 function configured() { return !!(URL && TOKEN); }
 
