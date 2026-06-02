@@ -93,6 +93,14 @@
       Object.keys(map).forEach(function (k) {
         if (s.colors[k]) root.style.setProperty(map[k], s.colors[k]);
       });
+      // Update <meta name="theme-color"> so Safari and Chrome tint their
+      // top/bottom chrome with the navbar colour. Done here too (in
+      // addition to the inline head-script) so dashboard edits update
+      // the browser chrome without a page reload.
+      if (s.colors.navbar) {
+        var tc = document.querySelector('meta[name="theme-color"]');
+        if (tc) tc.setAttribute('content', s.colors.navbar);
+      }
     }
 
     var brands = document.querySelectorAll('.brand-script');

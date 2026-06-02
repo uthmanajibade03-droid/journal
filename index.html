@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tints Safari's URL bar (and Android Chrome's address bar) to match
+       the page navbar. Updated by the inline head script and by
+       settings.js whenever the theme changes. -->
+  <meta name="theme-color" content="#0b0b0c" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Journals — uthman</title>
   <meta name="description" content="A topic in the middle, arrows out." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,6 +27,12 @@
         if (s.colors) {
           var map = { bg:'--bg', panel:'--panel', navbar:'--navbar', fg:'--fg', muted:'--muted', accent:'--accent' };
           for (var k in map) if (s.colors[k]) r.style.setProperty(map[k], s.colors[k]);
+          // Tint the Safari/Chrome chrome with the navbar colour so the
+          // browser bars at top and bottom blend into the page navbar.
+          if (s.colors.navbar) {
+            var tc = document.querySelector('meta[name="theme-color"]');
+            if (tc) tc.setAttribute('content', s.colors.navbar);
+          }
         }
         if (s.navbarStyle) r.setAttribute('data-navbar-style', s.navbarStyle);
         if (s.navbarVisibility != null) r.style.setProperty('--nav-vis', (Number(s.navbarVisibility) / 100).toFixed(3));
