@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="color-scheme" content="light dark" />
   <title>Journal — uthman</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,8 +22,8 @@
           var map = { bg:'--bg', panel:'--panel', navbar:'--navbar', fg:'--fg', muted:'--muted', accent:'--accent' };
           for (var k in map) if (s.colors[k]) r.style.setProperty(map[k], s.colors[k]);
           if (s.colors.bg) {
-            var tc = document.querySelector('meta[name="theme-color"]');
-            if (tc) tc.setAttribute('content', s.colors.bg);
+            var tcs = document.querySelectorAll('meta[name="theme-color"]');
+            for (var ti = 0; ti < tcs.length; ti++) tcs[ti].setAttribute('content', s.colors.bg);
           }
         }
         if (s.navbarStyle) r.setAttribute('data-navbar-style', s.navbarStyle);
@@ -56,10 +59,10 @@
   </div>
 
   <header class="top-header">
-    <a href="/" class="brand">
-      <span class="brand-script">uthman</span>
-      <svg class="brand-underline" viewBox="0 0 110 10" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M 2 6 C 18 2, 42 9, 64 4 C 82 0, 96 7, 108 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    <a href="/" class="brand" aria-label="Home">
+      <svg class="brand-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+        <line x1="12" y1="4" x2="12" y2="20"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
       </svg>
     </a>
     <div class="top-rule"></div>

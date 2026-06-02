@@ -98,8 +98,8 @@
       // addition to the inline head-script) so dashboard edits update
       // the browser chrome without a page reload.
       if (s.colors.bg) {
-        var tc = document.querySelector('meta[name="theme-color"]');
-        if (tc) tc.setAttribute('content', s.colors.bg);
+        var tcs = document.querySelectorAll('meta[name="theme-color"]');
+        for (var ti = 0; ti < tcs.length; ti++) tcs[ti].setAttribute('content', s.colors.bg);
       }
     }
 

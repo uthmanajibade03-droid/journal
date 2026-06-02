@@ -128,27 +128,56 @@
     }, { passive: true });
   }
 
-  // Search filter
+  // Animated inline search. Clicking the search icon drops the search
+  // row down out of the navbar, draws an accent underline left→right,
+  // and focuses the input. Typing filters the entries list live.
   var searchBtn = document.getElementById('search-btn');
-  if (searchBtn) {
-    searchBtn.addEventListener('click', function () {
-      var term = window.prompt('Search entries');
-      if (term === null) return;
-      var q = term.trim().toLowerCase();
-      if (!q) { render(false); return; }
-      var filtered = entries.filter(function (e) {
-        return (e.title + ' ' + (e.teaser || '')).toLowerCase().indexOf(q) !== -1;
-      });
-      if (!filtered.length) {
-        showError('No entries match "' + term + '"');
-      } else {
-        var html = '';
-        for (var i = 0; i < filtered.length; i++) {
-          html += rowHTML(filtered[i], filtered[i].id === entries[0].id);
-        }
-        listEl.innerHTML = html;
-        if (moreBtn) moreBtn.style.display = 'none';
-      }
+  var searchRow = document.getElementById('search-row');
+  var searchInput = document.getElementById('search-input');
+  var searchClose = document.getElementById('search-close');
+  var topHeader = document.querySelector('.top-header');
+
+  function applyFilter(q) {
+    q = (q || '').trim().toLowerCase();
+    if (!q) { render(false); return; }
+    var filtered = entries.filter(function (e) {
+      return (e.title + ' ' + (e.teaser || '')).toLowerCase().indexOf(q) !== -1;
     });
+    if (!filtered.length) { showError('No entries match "' + q + '"'); return; }
+    var html = '';
+    var topId = entries[0] && entries[0].id;
+    for (var i = 0; i < filtered.length; i++) {
+      html += rowHTML(filtered[i], filtered[i].id === topId);
+    }
+    listEl.innerHTML = html;
+    if (moreBtn) moreBtn.style.display = 'none';
   }
+
+  function openSearch() {
+    if (!topHeader) return;
+    topHeader.classList.add('is-searching');
+    setTimeout(function () { if (searchInput) searchInput.focus(); }, 260);
+  }
+  function closeSearch() {
+    if (!topHeader) return;
+    topHeader.classList.remove('is-searching');
+    if (searchInput) searchInput.value = '';
+    render(false);
+  }
+
+  if (searchBtn) searchBtn.addEventListener('click', openSearch);
+  if (searchClose) searchClose.addEventListener('click', closeSearch);
+  if (searchInput) searchInput.addEventListener('input', function () { applyFilter(searchInput.value); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && topHeader && topHeader.classList.contains('is-searching')) closeSearch();
+  });
+
+  // Click outside the search row (while open) to dismiss it.
+  document.addEventListener('click', function (e) {
+    if (!topHeader || !topHeader.classList.contains('is-searching')) return;
+    if (searchRow && searchRow.contains(e.target)) return;
+    if (searchBtn && searchBtn.contains(e.target)) return;
+    closeSearch();
+  });
 })();

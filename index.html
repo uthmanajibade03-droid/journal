@@ -4,10 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Tints Safari's URL bar (and Android Chrome's address bar) to match
-       the page background. Updated by the inline head script and by
-       settings.js whenever the theme changes. -->
+       the page background. Both variants explicitly set so iOS doesn't
+       fall back to a system dark default if the device is in dark mode.
+       Updated by the inline head script and by settings.js whenever
+       the theme changes. -->
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="color-scheme" content="light dark" />
   <title>Journals — uthman</title>
   <meta name="description" content="A topic in the middle, arrows out." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,8 +36,8 @@
           // browser bars match whatever the current theme uses for the
           // page background.
           if (s.colors.bg) {
-            var tc = document.querySelector('meta[name="theme-color"]');
-            if (tc) tc.setAttribute('content', s.colors.bg);
+            var tcs = document.querySelectorAll('meta[name="theme-color"]');
+            for (var ti = 0; ti < tcs.length; ti++) tcs[ti].setAttribute('content', s.colors.bg);
           }
         }
         if (s.navbarStyle) r.setAttribute('data-navbar-style', s.navbarStyle);
@@ -78,10 +83,10 @@
   </div>
 
   <header class="top-header">
-    <a href="/" class="brand">
-      <span class="brand-script">uthman</span>
-      <svg class="brand-underline" viewBox="0 0 110 10" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M 2 6 C 18 2, 42 9, 64 4 C 82 0, 96 7, 108 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    <a href="/" class="brand" aria-label="Home">
+      <svg class="brand-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+        <line x1="12" y1="4" x2="12" y2="20"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
       </svg>
     </a>
     <div class="top-rule"></div>
@@ -90,6 +95,19 @@
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
     </button>
+    <!-- Animated search row. Click the search icon → .is-searching is
+         added on .top-header; .search-row drops down and a thin
+         accent-coloured underline draws across (left → right). -->
+    <div class="search-row" id="search-row">
+      <input type="search" id="search-input" placeholder="Search…" autocomplete="off" spellcheck="false" />
+      <button class="search-close" id="search-close" aria-label="Close search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <span class="search-underline" aria-hidden="true"></span>
+    </div>
   </header>
 
   <aside class="side-menu" aria-hidden="true">
