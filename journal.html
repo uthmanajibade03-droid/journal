@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0b0b0c" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <title>Journal — uthman</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,9 +18,9 @@
         if (s.colors) {
           var map = { bg:'--bg', panel:'--panel', navbar:'--navbar', fg:'--fg', muted:'--muted', accent:'--accent' };
           for (var k in map) if (s.colors[k]) r.style.setProperty(map[k], s.colors[k]);
-          if (s.colors.navbar) {
+          if (s.colors.bg) {
             var tc = document.querySelector('meta[name="theme-color"]');
-            if (tc) tc.setAttribute('content', s.colors.navbar);
+            if (tc) tc.setAttribute('content', s.colors.bg);
           }
         }
         if (s.navbarStyle) r.setAttribute('data-navbar-style', s.navbarStyle);
