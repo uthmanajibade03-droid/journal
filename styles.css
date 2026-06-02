@@ -26,9 +26,17 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-html { background: var(--bg); }
+html {
+  /* Explicit background-color (not the shorthand) so iOS Safari paints
+     the overscroll bounce area with the theme's bg colour instead of
+     the system default (which is often black). overscroll-behavior
+     prevents the rubber-band from chaining/showing a different surface. */
+  background-color: var(--bg);
+  overscroll-behavior: none;
+  min-height: 100%;
+}
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--fg);
   font-family: var(--sans);
   font-weight: 300;
