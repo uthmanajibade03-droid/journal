@@ -13,11 +13,15 @@
     accent: '#f6c54a'
   };
   var PALETTE_PRESETS = {
-    amber:   { bg:'#0a0a0a', panel:'#111111', navbar:'#0b0b0c', fg:'#f5f1e8', muted:'#8a8275', accent:'#f6c54a' },
-    crimson: { bg:'#0c0608', panel:'#160c0e', navbar:'#0a0506', fg:'#f3e9e9', muted:'#9a8585', accent:'#e3535a' },
-    forest:  { bg:'#0a0e0a', panel:'#101410', navbar:'#080c08', fg:'#eaf0e8', muted:'#8a948a', accent:'#7dc080' },
-    steel:   { bg:'#0b0e12', panel:'#13171c', navbar:'#090c10', fg:'#e5edf3', muted:'#7d8a99', accent:'#5d9bff' },
-    sand:    { bg:'#f5efe1', panel:'#fffbf0', navbar:'#2a2520', fg:'#241f17', muted:'#7c6f56', accent:'#9e6b21' }
+    amber:    { bg:'#0a0a0a', panel:'#111111', navbar:'#0b0b0c', fg:'#f5f1e8', muted:'#8a8275', accent:'#f6c54a' },
+    crimson:  { bg:'#0c0608', panel:'#160c0e', navbar:'#0a0506', fg:'#f3e9e9', muted:'#9a8585', accent:'#e3535a' },
+    forest:   { bg:'#0a0e0a', panel:'#101410', navbar:'#080c08', fg:'#eaf0e8', muted:'#8a948a', accent:'#7dc080' },
+    steel:    { bg:'#0b0e12', panel:'#13171c', navbar:'#090c10', fg:'#e5edf3', muted:'#7d8a99', accent:'#5d9bff' },
+    sand:     { bg:'#f5efe1', panel:'#fffbf0', navbar:'#2a2520', fg:'#241f17', muted:'#7c6f56', accent:'#9e6b21' },
+    // "Default Two" — white background, red accent, dark navbar. This is
+    // also the hardcoded :root default in styles.css, so the look matches
+    // a fresh visit before any cache or settings load.
+    defaultTwo: { bg:'#ffffff', panel:'#ffffff', navbar:'#0b0b0c', fg:'#1a0d0d', muted:'#8a7a7a', accent:'#f74b4b' }
   };
 
   // ─── Tiny HSL helpers for the "Suggest palette" feature ──────────

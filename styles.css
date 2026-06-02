@@ -1,12 +1,17 @@
 :root {
-  --bg: #0b0b0c;
-  --panel: #111111;
+  /* "Default Two" — white + red with a dark navbar. This is the
+     hardcoded baseline that paints on a very first visit before the
+     inline head-script has a chance to apply a cached theme and before
+     settings.js has fetched the live one. It deliberately matches the
+     "Default Two" preset so the same look survives a cold cache. */
+  --bg: #ffffff;
+  --panel: #ffffff;
   --navbar: #0b0b0c;
-  --fg: #f1efe7;
-  --muted: rgba(241, 239, 231, 0.5);
-  --line: rgba(255, 255, 255, 0.14);
-  --accent: #e6d36b;
-  --ink: #f1efe7;
+  --fg: #1a0d0d;
+  --muted: #8a7a7a;
+  --line: rgba(0, 0, 0, 0.10);
+  --accent: #f74b4b;
+  --ink: #1a0d0d;
   /* 0..1 multiplier for the navbar fade/glass/solid alpha. Set on
      <html> by the inline head script and by settings.js so the value
      is available before .top-header even exists. */
@@ -62,7 +67,14 @@ html:not(.is-loading) .page-veil {
   pointer-events: none;
 }
 
-/* — Background stage (subtle warm light + notebook paper grain) — */
+/* — Background stage. Three layers stacked on top of --bg:
+     .bg-grad    — soft accent-tinted radial glows
+     .bg-paper   — visible fine grain (red-tinted noise, multiply blend
+                   so it darkens to pink/red specks on light bgs and
+                   stays subtle on dark themes)
+     .bg-overlay — gentle bottom-edge vignette for depth
+   The base colour tracks var(--bg); the grain and glow read against
+   whatever theme is current. — */
 .bg-stage {
   position: fixed; inset: 0; z-index: -1;
   pointer-events: none;
@@ -71,21 +83,28 @@ html:not(.is-loading) .page-veil {
 .bg-grad {
   position: absolute; inset: 0;
   background:
-    radial-gradient(900px 700px at 18% 28%, rgba(230, 211, 107, 0.07), transparent 65%),
-    radial-gradient(1100px 800px at 92% 88%, rgba(200, 200, 180, 0.05), transparent 70%),
-    linear-gradient(180deg, #0a0a0b 0%, #0c0c0d 60%, #0a0a0b 100%);
+    radial-gradient(900px 700px at 18% 28%,
+      color-mix(in srgb, var(--accent) 8%, transparent), transparent 65%),
+    radial-gradient(1100px 800px at 92% 88%,
+      color-mix(in srgb, var(--accent) 5%, transparent), transparent 70%);
 }
 .bg-paper {
   position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.88  0 0 0 0 0.82  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  background-size: 240px 240px;
-  opacity: 0.18;
-  mix-blend-mode: overlay;
+  /* feTurbulence + feColorMatrix make a fine red-tinted noise. With
+     mix-blend-mode: multiply, dark noise pixels darken the bg into
+     pink/red specks; very visible on white, near-invisible on near-
+     black — which keeps the "grainy vibe" on the default theme and
+     doesn't muddy darker themes. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0.85 0 0 0 0   0 0.25 0 0 0   0 0 0.25 0 0   0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
 }
 .bg-overlay {
   position: absolute; inset: 0;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 100%);
+  /* Very gentle bottom-edge vignette. Was a heavy dark wash designed
+     for dark themes; keeping a hint of the same idea but theme-neutral. */
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.06) 100%);
 }
 
 /* — Top header (brand · rule · search) — */
