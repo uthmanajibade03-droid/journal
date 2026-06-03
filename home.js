@@ -128,11 +128,10 @@
     }, { passive: true });
   }
 
-  // Minimal inline search: clicking the search icon turns the top-rule
-  // red and shows a blinking caret on it. A hidden <input> captures
-  // keystrokes and filters the entries list live — no visible textbox,
-  // no visible query. Esc, click outside, or another tap on the search
-  // icon dismisses.
+  // Inline search inside the navbar. The connector line slides down and
+  // an <input> fades in above it; the user sees what they type and the
+  // browser draws its own caret. Esc, clicking outside the navbar, or
+  // tapping the search icon again dismisses.
   var searchBtn = document.getElementById('search-btn');
   var searchInput = document.getElementById('search-input');
   var topHeader = document.querySelector('.top-header');
@@ -157,8 +156,11 @@
     if (!topHeader) return;
     topHeader.classList.add('is-searching');
     if (searchInput) {
-      try { searchInput.focus({ preventScroll: true }); }
-      catch (e) { searchInput.focus(); }
+      // Wait for the input to become pointer-events:auto before focusing.
+      setTimeout(function () {
+        try { searchInput.focus({ preventScroll: true }); }
+        catch (e) { searchInput.focus(); }
+      }, 60);
     }
   }
   function closeSearch() {
@@ -177,13 +179,19 @@
     e.stopPropagation();
     toggleSearch();
   });
-  if (searchInput) searchInput.addEventListener('input', function () { applyFilter(searchInput.value); });
+  if (searchInput) {
+    searchInput.addEventListener('input', function () { applyFilter(searchInput.value); });
+    // Clicks inside the input shouldn't be treated as "click outside".
+    searchInput.addEventListener('click', function (e) { e.stopPropagation(); });
+  }
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && topHeader && topHeader.classList.contains('is-searching')) closeSearch();
   });
-  // Click anywhere outside the search button (while open) → dismiss.
-  document.addEventListener('click', function () {
-    if (topHeader && topHeader.classList.contains('is-searching')) closeSearch();
+  // Click outside the navbar (while open) → dismiss.
+  document.addEventListener('click', function (e) {
+    if (!topHeader || !topHeader.classList.contains('is-searching')) return;
+    if (topHeader.contains(e.target)) return;
+    closeSearch();
   });
 })();

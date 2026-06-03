@@ -89,16 +89,19 @@
         <line x1="4" y1="12" x2="20" y2="12"/>
       </svg>
     </a>
-    <div class="top-rule"></div>
+    <!-- The connector line shares space with an inline search input.
+         Clicking the search icon slides the line down a few px and
+         fades the input in above it so the line acts as the input's
+         underline. -->
+    <div class="rule-wrap">
+      <input type="search" id="search-input" class="top-search-input" placeholder="Search entries…" autocomplete="off" spellcheck="false" />
+      <div class="top-rule"></div>
+    </div>
     <button class="top-search" aria-label="Search" id="search-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
     </button>
-    <!-- Off-screen input that captures keystrokes while .is-searching is
-         on .top-header. No visible UI — the activation signal is the
-         top-rule animating to accent red with a blinking caret on it. -->
-    <input type="search" id="search-input" class="search-stealth" autocomplete="off" spellcheck="false" aria-label="Search entries" />
   </header>
 
   <aside class="side-menu" aria-hidden="true">
