@@ -95,19 +95,10 @@
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
     </button>
-    <!-- Animated search row. Click the search icon → .is-searching is
-         added on .top-header; .search-row drops down and a thin
-         accent-coloured underline draws across (left → right). -->
-    <div class="search-row" id="search-row">
-      <input type="search" id="search-input" placeholder="Search…" autocomplete="off" spellcheck="false" />
-      <button class="search-close" id="search-close" aria-label="Close search">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <span class="search-underline" aria-hidden="true"></span>
-    </div>
+    <!-- Off-screen input that captures keystrokes while .is-searching is
+         on .top-header. No visible UI — the activation signal is the
+         top-rule animating to accent red with a blinking caret on it. -->
+    <input type="search" id="search-input" class="search-stealth" autocomplete="off" spellcheck="false" aria-label="Search entries" />
   </header>
 
   <aside class="side-menu" aria-hidden="true">
